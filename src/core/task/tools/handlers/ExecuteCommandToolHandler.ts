@@ -6,6 +6,7 @@ import { COMMAND_REQ_APP_STRING } from "@shared/combineCommandSequences"
 import { ClineAsk } from "@shared/ExtensionMessage"
 import { arePathsEqual } from "@utils/path"
 import { type ActionOutcome, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
+import { notifyEdit } from "@/core/usage/AutoBackup"
 import { telemetryService } from "@/services/telemetry"
 import { ClineDefaultTool } from "@/shared/tools"
 import type { ToolResponse } from "../../index"
@@ -377,6 +378,13 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 					error: auditError,
 				}),
 			)
+			if (auditOutcome === "completed") {
+				try {
+					notifyEdit(config.ulid, config.cwd)
+				} catch (e) {
+					void e
+				}
+			}
 		}
 	}
 }

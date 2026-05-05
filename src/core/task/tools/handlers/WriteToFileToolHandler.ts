@@ -11,6 +11,7 @@ import { fileExistsAtPath } from "@utils/fs"
 import { arePathsEqual, getReadablePath, isLocatedInWorkspace } from "@utils/path"
 import { applyPatch } from "diff"
 import { type ActionOutcome, type ActionTool, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
+import { notifyEdit } from "@/core/usage/AutoBackup"
 import { telemetryService } from "@/services/telemetry"
 import { ClineDefaultTool } from "@/shared/tools"
 import type { ToolResponse } from "../../index"
@@ -406,6 +407,27 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 				await config.services.diffViewProvider.saveChanges()
 			auditOutcome = "completed"
 
+			// LuciBuild Round T (GT3): post-edit verify-and-rollback. If saveChanges
+			// reports NEW type/lint errors (newProblemsMessage is errors-only by
+			// design — see DiffViewProvider.getNewDiagnosticProblems), undo the
+			// edit by writing the original content back. The agent gets a clear
+			// error explaining why, and the file is restored to its pre-edit state.
+			const rollbackEnabled = config.autoApprovalSettings?.autoRollbackOnTypeError !== false
+			if (rollbackEnabled && newProblemsMessage && newProblemsMessage.trim().length > 0) {
+				auditOutcome = "rolled_back"
+				auditError = "post_edit_new_errors"
+				try {
+					// revertChanges writes originalContent back to disk via saveDocument()
+					await config.services.diffViewProvider.revertChanges()
+				} catch (e) {
+					void e
+				}
+				config.taskState.consecutiveMistakeCount++
+				return formatResponse.toolError(
+					`LuciBuild auto-rollback fired: this edit introduced new type/lint errors that weren't there before. The file has been restored to its pre-edit state.${newProblemsMessage}\n\nFix the underlying issue and try the edit again. To disable auto-rollback, toggle "autoRollbackOnTypeError" off in the auto-approve settings.`,
+				)
+			}
+
 			// Reset consecutive mistake counter on successful file operation
 			config.taskState.consecutiveMistakeCount = 0
 
@@ -473,6 +495,15 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 					error: auditError,
 				}),
 			)
+			// LuciBuild Round T (L3): notify periodic-backup engine. Fires a
+			// tarball when N edits or N minutes pass — non-blocking.
+			if (auditOutcome === "completed") {
+				try {
+					notifyEdit(config.ulid, config.cwd)
+				} catch (e) {
+					void e
+				}
+			}
 		}
 	}
 

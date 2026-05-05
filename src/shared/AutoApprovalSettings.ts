@@ -27,6 +27,11 @@ export interface AutoApprovalSettings {
 	// command) prompts for approval regardless of the per-action auto-approve flags.
 	// Reads still auto-approve so search/list isn't slowed down.
 	highStakesMode?: boolean
+	// LuciBuild Round T (GT3): auto-rollback when an edit introduces NEW
+	// type/lint errors that weren't present before. Uses the just-created
+	// pre-tool checkpoint (L2) as the rollback target. Default true — this is
+	// the recommended trust default.
+	autoRollbackOnTypeError?: boolean
 }
 
 export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
@@ -50,4 +55,5 @@ export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
 	},
 	enableNotifications: false,
 	highStakesMode: false,
+	autoRollbackOnTypeError: true,
 }

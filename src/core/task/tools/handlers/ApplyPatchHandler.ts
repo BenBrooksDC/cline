@@ -8,6 +8,7 @@ import { fileExistsAtPath } from "@utils/fs"
 import { getReadablePath, isLocatedInWorkspace } from "@utils/path"
 import { applyPatch } from "diff"
 import { type ActionOutcome, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
+import { notifyEdit } from "@/core/usage/AutoBackup"
 import { telemetryService } from "@/services/telemetry"
 import { BASH_WRAPPERS, DiffError, PATCH_MARKERS, type Patch, PatchActionType, type PatchChunk } from "@/shared/Patch"
 import { preserveEscaping } from "@/shared/string"
@@ -436,6 +437,13 @@ export class ApplyPatchHandler implements IFullyManagedTool {
 					error: auditError,
 				}),
 			)
+			if (auditOutcome === "completed") {
+				try {
+					notifyEdit(config.ulid, config.cwd)
+				} catch (e) {
+					void e
+				}
+			}
 		}
 	}
 
