@@ -42,6 +42,7 @@ import { registerUsageStatusBar } from "./hosts/vscode/cline-cc-status-bar"
 import { findMatchingNotebookCell, getContextForCommand, showWebview } from "./hosts/vscode/commandUtils"
 import { abortCommitGeneration, generateCommitMsg } from "./hosts/vscode/commit-message-generator"
 import { registerClineOutputChannel } from "./hosts/vscode/hostbridge/env/debugLog"
+import { registerTrustStatusBar } from "./hosts/vscode/lucibuild-trust-status-bar"
 import {
 	disposeVscodeCommentReviewController,
 	getVscodeCommentReviewController,
@@ -90,6 +91,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Cline-CC fork: register the live cross-provider usage monitor in the status bar
 	registerUsageStatusBar(context)
+	// LuciBuild Round T (G3): register the trust status-bar widget. Shows the
+	// most recent destructive tool action + 24h activity count + click-to-audit.
+	registerTrustStatusBar(context)
 
 	// Initialize hook discovery cache for performance optimization
 	HookDiscoveryCache.getInstance().initialize(

@@ -4,6 +4,7 @@ import * as fsp from "fs/promises"
 import * as os from "os"
 import * as path from "path"
 import { Logger } from "@/shared/services/Logger"
+import { isEnabled as isCostlyFeatureEnabled } from "./CostlyFeatures"
 
 // LuciBuild Round T (L3): periodic off-workspace tarball backup.
 //
@@ -108,6 +109,61 @@ async function runTarball(workspacePath: string, taskId: string): Promise<void> 
 }
 
 /**
+ * LuciBuild Round T (L4): GitHub mirror push.
+ *
+ * Behind the auto-github-mirror CostlyFeatures toggle (default OFF). When the
+ * toggle is on AND the workspace has a real .git repo, after a tarball lands
+ * we run `gh repo create --private` (idempotent — fails silently if it
+ * already exists) and `git push origin HEAD`. Best-effort: any failure is
+ * logged + swallowed so the user's task isn't blocked.
+ */
+async function maybeMirrorToGitHub(workspacePath: string): Promise<void> {
+	try {
+		const enabled = await isCostlyFeatureEnabled("auto-github-mirror")
+		if (!enabled) {
+			return
+		}
+		// Workspace must have its own .git for mirror push to make sense.
+		if (!fs.existsSync(path.join(workspacePath, ".git"))) {
+			return
+		}
+		const repoName = `lucibuild-mirror-${path.basename(workspacePath).replace(/[^a-zA-Z0-9_-]/g, "-")}`
+
+		// Ensure remote `lucibuild-mirror` exists. Idempotent: try to add it,
+		// ignore failure if it already exists. We point it at the gh-managed
+		// private repo by name (gh resolves it to the user's account).
+		await runShortLived("gh", ["repo", "create", repoName, "--private", "--source", workspacePath, "--push"], workspacePath)
+		// Subsequent pushes: gh repo create's --push only works the first time;
+		// follow-ups need an explicit git push.
+		await runShortLived("git", ["push", "lucibuild-mirror", "HEAD"], workspacePath)
+		Logger.info(`LuciBuild AutoBackup: mirror pushed for ${workspacePath} → ${repoName}`)
+	} catch (err) {
+		Logger.warn(`LuciBuild AutoBackup: mirror push failed: ${err instanceof Error ? err.message : String(err)}`)
+	}
+}
+
+function runShortLived(cmd: string, args: string[], cwd: string): Promise<void> {
+	return new Promise((resolve) => {
+		const child = spawn(cmd, args, { cwd, stdio: "ignore" })
+		const timer = setTimeout(() => {
+			try {
+				child.kill("SIGTERM")
+			} catch {
+				/* ignore */
+			}
+		}, 30_000)
+		child.once("exit", () => {
+			clearTimeout(timer)
+			resolve()
+		})
+		child.once("error", () => {
+			clearTimeout(timer)
+			resolve()
+		})
+	})
+}
+
+/**
  * Apply retention policy: keep last N files AND drop anything older than max age.
  * Idempotent + best-effort: failures don't block.
  */
@@ -180,6 +236,7 @@ export function notifyEdit(taskId: string, workspacePath: string): void {
 		void (async () => {
 			await runTarball(workspacePath, taskId)
 			await applyRetention()
+			await maybeMirrorToGitHub(workspacePath)
 		})()
 	}
 }

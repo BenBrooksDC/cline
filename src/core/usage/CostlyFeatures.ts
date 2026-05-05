@@ -59,6 +59,13 @@ export const COSTLY_FEATURES: CostlyFeatureSpec[] = [
 		costEstimate: "~$0.50–$2/day for typical use (gpt-4o-mini for ghost-text per keystroke after debounce).",
 		why: "Sends keystrokes (after a debounce) to a hosted model for Tab completions. Local Ollama model (T36a) is the free default.",
 	},
+	{
+		id: "auto-github-mirror",
+		label: "Auto GitHub mirror (Round T L4)",
+		costEstimate:
+			"No API cost. Uses bandwidth + your existing gh auth. Background pushes after each tarball backup (~once per 10 edits or 15 min).",
+		why: "When a periodic tarball backup lands, push the workspace to a private GitHub mirror named lucibuild-mirror-<workspace> for cross-machine recoverability. Requires 'gh' CLI logged in.",
+	},
 ]
 
 interface FeatureState {
