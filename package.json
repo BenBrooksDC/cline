@@ -240,6 +240,16 @@
 				"title": "Add to Cline Chat",
 				"category": "Cline",
 				"icon": "$(link-external)"
+			},
+			{
+				"command": "lucibuild.writeTestsForSelection",
+				"title": "Write Tests with LuciBuild",
+				"category": "LuciBuild"
+			},
+			{
+				"command": "cline.fixWithCline",
+				"title": "Fix with LuciBuild",
+				"category": "LuciBuild"
 			}
 		],
 		"keybindings": [
@@ -301,6 +311,26 @@
 				{
 					"command": "cline.addToChat",
 					"group": "navigation",
+					"when": "editorHasSelection"
+				},
+				{
+					"command": "cline.explainCode",
+					"group": "lucibuild@1",
+					"when": "editorHasSelection"
+				},
+				{
+					"command": "cline.improveCode",
+					"group": "lucibuild@2",
+					"when": "editorHasSelection"
+				},
+				{
+					"command": "cline.fixWithCline",
+					"group": "lucibuild@3",
+					"when": "editorHasSelection"
+				},
+				{
+					"command": "lucibuild.writeTestsForSelection",
+					"group": "lucibuild@4",
 					"when": "editorHasSelection"
 				}
 			],

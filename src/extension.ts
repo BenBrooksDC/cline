@@ -377,6 +377,31 @@ export async function activate(context: vscode.ExtensionContext) {
 		}),
 	)
 
+	// LuciBuild fork (T11): "Write Tests for Selection" right-click action
+	context.subscriptions.push(
+		vscode.commands.registerCommand("lucibuild.writeTestsForSelection", async () => {
+			const editor = vscode.window.activeTextEditor
+			if (!editor || editor.selection.isEmpty) {
+				HostProvider.window.showMessage({
+					type: ShowMessageType.WARNING,
+					message: "LuciBuild: select some code first, then run this action.",
+				})
+				return
+			}
+			const selection = editor.document.getText(editor.selection)
+			const filePath = editor.document.uri.fsPath
+			const lang = editor.document.languageId
+			const startLine = editor.selection.start.line + 1
+			const endLine = editor.selection.end.line + 1
+			const prompt = `Write comprehensive tests for the following ${lang} code from \`${filePath}\` (lines ${startLine}-${endLine}). Use the project's existing test framework (check package.json / requirements.txt / Cargo.toml). Cover: happy path, edge cases, error conditions. Place the test file in the project's standard test directory.\n\n\`\`\`${lang}\n${selection}\n\`\`\``
+			const webview = WebviewProvider.getInstance() as VscodeWebviewProvider | undefined
+			if (webview) {
+				await sendShowWebviewEvent()
+				await sendAddToInputEvent(prompt)
+			}
+		}),
+	)
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand(commands.FocusChatInput, async (preserveEditorFocus = false) => {
 			const webview = WebviewProvider.getInstance() as VscodeWebviewProvider
