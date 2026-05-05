@@ -6,6 +6,7 @@ import simpleGit from "simple-git"
 import type { FolderLockWithRetryResult } from "@/core/locks/types"
 import { telemetryService } from "@/services/telemetry"
 import { Logger } from "@/shared/services/Logger"
+import { maybeAutoInitWorkspaceGit } from "./AutoGitInit"
 import { GitOperations } from "./CheckpointGitOperations"
 import { releaseCheckpointLock, tryAcquireCheckpointLockWithRetry } from "./CheckpointLockUtils"
 import { getShadowGitPath, hashWorkingDir } from "./CheckpointUtils"
@@ -161,6 +162,10 @@ class CheckpointTracker {
 			// For now, we just use the first valid path
 			const workingDir = Array.isArray(workspacePaths) ? workspacePaths[0] : workspacePaths
 
+			// LuciBuild Round T (L1): offer to init real git in non-git workspaces.
+			// Non-blocking — skipped + logged on any failure.
+			await maybeAutoInitWorkspaceGit(workingDir)
+
 			const cwdHash = hashWorkingDir(workingDir)
 			Logger.debug(`Repository ID (cwdHash): ${cwdHash}`)
 
@@ -210,7 +215,7 @@ class CheckpointTracker {
 	 * - Stage or commit files
 	 */
 	public async commit(): Promise<string | undefined> {
-		let lockAcquired: boolean = false
+		let lockAcquired = false
 
 		try {
 			await this.sendCheckpointSubscriptionEvent("CHECKPOINT_COMMIT", true)
@@ -334,7 +339,7 @@ class CheckpointTracker {
 	 * - Reset to target commit
 	 */
 	public async resetHead(commitHash: string): Promise<void> {
-		let lockAcquired: boolean = false
+		let lockAcquired = false
 
 		try {
 			Logger.info(`Resetting to checkpoint: ${commitHash}`)

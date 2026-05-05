@@ -7,6 +7,7 @@ import type { ClineSayTool } from "@shared/ExtensionMessage"
 import { fileExistsAtPath } from "@utils/fs"
 import { getReadablePath, isLocatedInWorkspace } from "@utils/path"
 import { applyPatch } from "diff"
+import { type ActionOutcome, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
 import { telemetryService } from "@/services/telemetry"
 import { BASH_WRAPPERS, DiffError, PATCH_MARKERS, type Patch, PatchActionType, type PatchChunk } from "@/shared/Patch"
 import { preserveEscaping } from "@/shared/string"
@@ -227,6 +228,10 @@ export class ApplyPatchHandler implements IFullyManagedTool {
 			}
 		}
 
+		// LuciBuild Round T (GT5): tool-action audit log.
+		const auditStart = Date.now()
+		let auditOutcome: ActionOutcome = "errored"
+		let auditError: string | undefined
 		try {
 			const lines = this.preprocessLines(rawInput)
 
@@ -302,6 +307,7 @@ export class ApplyPatchHandler implements IFullyManagedTool {
 				// Get approval
 				const approved = await this.handleApproval(config, block, message, rawInput, change)
 				if (!approved) {
+					auditOutcome = "rejected"
 					this.config = undefined
 					config.taskState.didRejectTool = true
 					await provider.revertChanges()
@@ -404,12 +410,25 @@ export class ApplyPatchHandler implements IFullyManagedTool {
 				responseLines.push(`\nNote: Patch applied with fuzz factor ${fuzz}`)
 			}
 
+			auditOutcome = "completed"
 			return responseLines.join("\n")
 		} catch (error) {
+			auditOutcome = "errored"
+			auditError = error instanceof Error ? error.message : String(error)
 			await provider.revertChanges()
 			throw error
 		} finally {
 			await provider.reset()
+			recordAction(
+				buildActionEvent({
+					tool: "apply_patch",
+					outcome: auditOutcome,
+					taskId: config.ulid,
+					rawParams: { content: rawInput },
+					latencyMs: Date.now() - auditStart,
+					error: auditError,
+				}),
+			)
 		}
 	}
 

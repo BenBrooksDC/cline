@@ -135,6 +135,26 @@ const AutoApproveModal: React.FC<AutoApproveModalProps> = ({ isVisible, setIsVis
 				<div className="mt-1 text-xs text-muted-foreground">
 					Notifications may show abbreviated tool details for safety and privacy.
 				</div>
+
+				{/* LuciBuild Round T: high-stakes mode panic-button */}
+				<div className="mt-3 flex items-center gap-2">
+					<VSCodeCheckbox
+						checked={autoApprovalSettings.highStakesMode === true}
+						onChange={async (e: any) => {
+							const checked = e.target.checked === true
+							await updateAutoApproveSettings({
+								...autoApprovalSettings,
+								version: (autoApprovalSettings.version ?? 1) + 1,
+								highStakesMode: checked,
+							})
+						}}>
+						<span className="text-sm">High-stakes mode</span>
+					</VSCodeCheckbox>
+				</div>
+				<div className="mt-1 text-xs text-muted-foreground">
+					Forces approval for every write, patch, and command — overrides every other auto-approve setting. Reads stay
+					frictionless.
+				</div>
 			</div>
 		</div>
 	)

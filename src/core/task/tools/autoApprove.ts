@@ -6,6 +6,17 @@ import { HostProvider } from "@/hosts/host-provider"
 import { getCwd, getDesktopDir, isLocatedInPath, isLocatedInWorkspace } from "@/utils/path"
 import { isClaudeCodeAllowlisted } from "./claudeCodePermissions"
 
+// LuciBuild Round T: tools that mutate state (writes / patches / commands).
+// When high-stakes mode is on, these always require user approval, regardless
+// of any other auto-approve setting. Reads stay frictionless.
+const MUTATING_TOOLS: ReadonlySet<ClineDefaultTool> = new Set([
+	ClineDefaultTool.NEW_RULE,
+	ClineDefaultTool.FILE_NEW,
+	ClineDefaultTool.FILE_EDIT,
+	ClineDefaultTool.APPLY_PATCH,
+	ClineDefaultTool.BASH,
+])
+
 export class AutoApprove {
 	private stateManager: StateManager
 	// Cache for workspace paths - populated on first access and reused for the task lifetime
@@ -38,9 +49,20 @@ export class AutoApprove {
 		}
 	}
 
+	// LuciBuild Round T: panic-button. When highStakesMode is on, mutating tools
+	// always require approval — overrides yolo / autoApproveAll / per-action toggles
+	// / Claude-Code allowlist. Reads stay frictionless.
+	private isHighStakesBlocked(toolName: ClineDefaultTool): boolean {
+		const settings = this.stateManager.getGlobalSettingsKey("autoApprovalSettings")
+		return settings?.highStakesMode === true && MUTATING_TOOLS.has(toolName)
+	}
+
 	// Check if the tool should be auto-approved based on the settings
 	// Returns bool for most tools, and tuple for tools with nested settings
 	shouldAutoApproveTool(toolName: ClineDefaultTool): boolean | [boolean, boolean] {
+		if (this.isHighStakesBlocked(toolName)) {
+			return false
+		}
 		if (this.stateManager.getGlobalSettingsKey("yoloModeToggled")) {
 			switch (toolName) {
 				case ClineDefaultTool.FILE_READ:
@@ -124,6 +146,9 @@ export class AutoApprove {
 		blockname: ClineDefaultTool,
 		autoApproveActionpath: string | undefined,
 	): Promise<boolean> {
+		if (this.isHighStakesBlocked(blockname)) {
+			return false
+		}
 		if (this.stateManager.getGlobalSettingsKey("yoloModeToggled")) {
 			return true
 		}

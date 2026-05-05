@@ -5,6 +5,7 @@ import { showApprovalNotification, showSystemNotification } from "@integrations/
 import { COMMAND_REQ_APP_STRING } from "@shared/combineCommandSequences"
 import { ClineAsk } from "@shared/ExtensionMessage"
 import { arePathsEqual } from "@utils/path"
+import { type ActionOutcome, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
 import { telemetryService } from "@/services/telemetry"
 import { ClineDefaultTool } from "@/shared/tools"
 import type { ToolResponse } from "../../index"
@@ -310,26 +311,50 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 			finalCommand = `cd "${executionDir}" && ${actualCommand}`
 		}
 
-		const [userRejected, result] = await config.callbacks.executeCommandTool(finalCommand, timeoutSeconds)
+		// LuciBuild Round T (GT5): tool-action audit log.
+		const auditStart = Date.now()
+		let auditOutcome: ActionOutcome = didAutoApprove ? "auto_approved" : "approved"
+		let auditError: string | undefined
+		try {
+			const [userRejected, result] = await config.callbacks.executeCommandTool(finalCommand, timeoutSeconds)
 
-		if (timeoutId) {
-			clearTimeout(timeoutId)
+			if (timeoutId) {
+				clearTimeout(timeoutId)
+			}
+
+			// Invalidate the entire file read cache after any command execution.
+			// Bash commands can modify files in ways we can't predict (sed, npm install, git checkout, mv, etc.),
+			// so we must clear the cache to prevent stale reads.
+			if (!userRejected) {
+				config.taskState.fileReadCache.clear()
+			}
+
+			if (userRejected) {
+				config.taskState.didRejectTool = true
+				auditOutcome = "rejected"
+			} else {
+				auditOutcome = "completed"
+			}
+
+			return result
+		} catch (error) {
+			auditOutcome = "errored"
+			auditError = error instanceof Error ? error.message : String(error)
+			throw error
+		} finally {
+			recordAction(
+				buildActionEvent({
+					tool: "execute_command",
+					outcome: auditOutcome,
+					taskId: config.ulid,
+					rawParams: {
+						command: actualCommand,
+						requires_approval: requiresApprovalPerLLM,
+					},
+					latencyMs: Date.now() - auditStart,
+					error: auditError,
+				}),
+			)
 		}
-
-		// Invalidate the entire file read cache after any command execution.
-		// Bash commands can modify files in ways we can't predict (sed, npm install, git checkout, mv, etc.),
-		// so we must clear the cache to prevent stale reads.
-		// Invalidate the entire file read cache after any command execution.
-		// Bash commands can modify files in ways we can't predict (sed, npm install, git checkout, mv, etc.),
-		// so we must clear the cache to prevent stale reads.
-		if (!userRejected) {
-			config.taskState.fileReadCache.clear()
-		}
-
-		if (userRejected) {
-			config.taskState.didRejectTool = true
-		}
-
-		return result
 	}
 }

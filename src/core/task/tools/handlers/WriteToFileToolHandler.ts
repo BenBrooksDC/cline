@@ -10,6 +10,7 @@ import { getLastApiReqTotalTokens } from "@shared/getApiMetrics"
 import { fileExistsAtPath } from "@utils/fs"
 import { arePathsEqual, getReadablePath, isLocatedInWorkspace } from "@utils/path"
 import { applyPatch } from "diff"
+import { type ActionOutcome, type ActionTool, buildActionEvent, recordAction } from "@/core/usage/ActionAuditLog"
 import { telemetryService } from "@/services/telemetry"
 import { ClineDefaultTool } from "@/shared/tools"
 import type { ToolResponse } from "../../index"
@@ -157,9 +158,24 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 		// NOTE: Do NOT reset consecutiveMistakeCount here - it should only be reset after successful completion
 		// The reset was moved to after saveChanges() succeeds to properly track consecutive failures
 
+		// LuciBuild Round T (GT5): tool-action audit log. Outcome defaults to
+		// "errored" so an exception inside the try block produces an "errored"
+		// audit entry without explicit threading.
+		const auditStart = Date.now()
+		let auditOutcome: ActionOutcome = "errored"
+		let auditError: string | undefined
+		const auditTool: ActionTool =
+			block.name === "replace_in_file" ? "replace_in_file" : block.name === "new_rule" ? "new_rule" : "write_to_file"
+		const auditParams: Record<string, unknown> = {
+			path: rawRelPath,
+			content: rawContent,
+			diff: rawDiff,
+		}
 		try {
 			const result = await this.validateAndPrepareFileOperation(config, block, rawRelPath, rawDiff, rawContent)
 			if (!result) {
+				auditOutcome = "errored"
+				auditError = "validation_failed"
 				return "" // can only happen if the sharedLogic adds an error to userMessages
 			}
 
@@ -202,6 +218,7 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 			} satisfies ClineSayTool)
 
 			if (await config.callbacks.shouldAutoApproveToolWithPath(block.name, relPath)) {
+				auditOutcome = "auto_approved"
 				// Auto-approval flow
 				await config.callbacks.removeLastPartialMessageIfExistsWithType("ask", "tool")
 				await config.callbacks.say("tool", completeMessage, undefined, undefined, false)
@@ -246,6 +263,7 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 				const { response, text, images, files } = await config.callbacks.ask("tool", completeMessage, false)
 
 				if (response !== "yesButtonClicked") {
+					auditOutcome = "rejected"
 					// Handle rejection with detailed messages
 					const fileDeniedNote = fileExists
 						? "The file was not updated, and maintains its original contents."
@@ -360,6 +378,7 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 			// Save the changes and get the result
 			const { newProblemsMessage, userEdits, autoFormattingEdits, finalContent } =
 				await config.services.diffViewProvider.saveChanges()
+			auditOutcome = "completed"
 
 			// Reset consecutive mistake counter on successful file operation
 			config.taskState.consecutiveMistakeCount = 0
@@ -410,10 +429,24 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 			}
 			return formatResponse.fileEditWithoutUserChanges(relPath, autoFormattingEdits, finalContent, newProblemsMessage)
 		} catch (error) {
+			auditOutcome = "errored"
+			auditError = error instanceof Error ? error.message : String(error)
 			// Reset diff view on error
 			await config.services.diffViewProvider.revertChanges()
 			await config.services.diffViewProvider.reset()
 			throw error
+		} finally {
+			// LuciBuild Round T (GT5): emit one audit event per execute() call.
+			recordAction(
+				buildActionEvent({
+					tool: auditTool,
+					outcome: auditOutcome,
+					taskId: config.ulid,
+					rawParams: auditParams,
+					latencyMs: Date.now() - auditStart,
+					error: auditError,
+				}),
+			)
 		}
 	}
 

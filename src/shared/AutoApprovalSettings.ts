@@ -23,6 +23,10 @@ export interface AutoApprovalSettings {
 	}
 	// Global settings
 	enableNotifications: boolean // Show notifications for approval and task completion
+	// LuciBuild Round T: panic-button. When true, every mutating tool (write, patch,
+	// command) prompts for approval regardless of the per-action auto-approve flags.
+	// Reads still auto-approve so search/list isn't slowed down.
+	highStakesMode?: boolean
 }
 
 export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
@@ -45,4 +49,5 @@ export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
 		useMcp: true,
 	},
 	enableNotifications: false,
+	highStakesMode: false,
 }
