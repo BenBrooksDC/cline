@@ -35,6 +35,85 @@ Below is the user's PR review request:
 `
 
 /**
+ * LuciBuild fork: /tools slash command. Lists every LuciBuild slash command + tool
+ * with a one-line description so the user can discover what's available.
+ */
+export const toolsToolResponse = () =>
+	`<explicit_instructions type="tools">
+Print a clean menu of every LuciBuild capability so the user can discover what to use. Format as a table grouped by purpose. Be specific about what triggers each one.
+
+Output template (fill in real descriptions for each):
+
+\`\`\`
+LUCIBUILD CAPABILITY MENU
+
+[Tool acquisition]
+  /install <description>       — source/install/configure a new tool (CLI, library, MCP server). Shows dry-run preview, asks before executing.
+  /bootstrap <description>     — scaffold a starter project from a description.
+
+[Code review & quality]
+  /pre-commit-review           — senior-eng review of your uncommitted diff before pushing.
+  /review-pr <num|url>         — review a GitHub PR like a senior reviewer.
+  /tdd <spec>                  — strict TDD: failing test → minimum code → pass.
+  /audit                       — npm/pip/cargo dep security audit.
+  /a11y                        — accessibility + i18n audit for frontend.
+  /debt                        — tech-debt tracker (TODO/FIXME, complexity, dead code).
+  /perf                        — run profiler + propose optimizations.
+  /secret-rotate               — find hardcoded secrets, propose .env migration.
+
+[Productivity]
+  /onboard                     — first-run repo onboarding brief.
+  /diagram                     — generate Mermaid/PlantUML architecture diagrams.
+  /migrate <from> -> <to>      — multi-file automated migrations (callbacks→async, JS→TS, etc.).
+  /persona <name>              — switch agent persona (senior-backend, security-reviewer, etc.).
+  /template <save|use|list>    — save / run reusable workflow templates.
+  /snippet <save|use|list>     — reusable code snippet library.
+
+[Memory & state]
+  /remember                    — propose memory entries from this conversation.
+  /export-chat                 — export conversation as a markdown playbook.
+  /compact (or /smol)          — condense context window.
+
+[Privacy & cost]
+  /privacy                     — toggle all-local-only mode (disables remote APIs).
+
+[Tools auto-applied via voice directive — no command needed]
+  Smart paste                  — paste a stack trace / URL / CSV / SQL / JSON / log; agent classifies + acts.
+  Anti-bias check              — flags requests that contradict your usual patterns.
+  Failure-mode detector        — nudges based on profile-flagged failure modes.
+  Style transfer               — generated commits/READMEs/PRs match your voice fingerprint.
+  Refactoring nudges           — offers conversions you've made before in similar code.
+  Cross-project transfer       — surfaces solutions from your other repos.
+  Cross-repo refactoring       — flags ripple-effect changes across multiple open repos.
+  Comment-driven coding        — // TODO comments are treated as implicit asks.
+  API spec awareness           — auto-uses openapi.yaml/swagger.json for typed code.
+  Schema awareness             — auto-uses Prisma/drizzle/SQL DDL for queries.
+  Protected ranges             — respects // LUCIBUILD: DO NOT EDIT markers.
+  Time-of-day energy proxy     — more cautious late at night, more autonomous in mornings.
+  Personalized learning        — explainers tuned to what your profile says you know.
+
+[Self-learning loops — no command needed]
+  Acceptance tracker           — every approval/rejection logged → influences future suggestions.
+  Memory weight promotion      — useful memories sort to the top over time.
+  Prompt bandit                — for relay calls, learns which prompt framing wins.
+  Self-evaluation              — agent sees its own past accept rate per tool.
+
+[Auto-loaded into every system prompt — no command needed]
+  ~/CLAUDE.md (your project context)
+  Memory index from ~/.claude/projects/.../memory/MEMORY.md
+  Last session summary for this workspace
+  Git log + status of the current repo
+  User profile from ~/.claude/lucibuild-profile/profile.md
+  Active costly-feature toggles
+\`\`\`
+
+Tail the menu with one short line: "Type any of these into the chat to invoke."
+
+Below is the user's tools-menu request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /privacy slash command. Toggle privacy mode (all-local-only).
  */
 export const privacyToolResponse = () =>
