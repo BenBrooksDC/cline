@@ -49,12 +49,11 @@ import { cn } from "@/lib/utils"
 import { FileServiceClient, UiServiceClient } from "@/services/grpc-client"
 import { findMatchingResourceOrTemplate, getMcpServerDisplayName } from "@/utils/mcp"
 import CodeAccordian, { cleanPathPrefix } from "../common/CodeAccordian"
-import { CommandOutputContent, CommandOutputRow } from "./CommandOutputRow"
+import { CommandOutputRow } from "./CommandOutputRow"
 import { CompletionOutputRow } from "./CompletionOutputRow"
 import { DiffEditRow } from "./DiffEditRow"
 import ErrorRow from "./ErrorRow"
 import { FeatureTip } from "./FeatureTip"
-import HookMessage from "./HookMessage"
 import { MarkdownRow } from "./MarkdownRow"
 import NewTaskPreview from "./NewTaskPreview"
 import PlanCompletionOutputRow from "./PlanCompletionOutputRow"
@@ -1104,7 +1103,10 @@ export const ChatRowContent = memo(
 							)
 						}
 					case "hook_status":
-						return <HookMessage CommandOutput={CommandOutputContent} message={message} />
+						// LuciBuild fork: hide the hook-status UI entirely. Hooks fire silently; their
+						// contextModification is injected into the system prompt, no need to show the
+						// raw stdout dump in the chat. (Original behavior: <HookMessage ... />)
+						return <InvisibleSpacer />
 					case "hook_output_stream":
 						// hook_output_stream messages are combined with hook_status messages, so we don't render them separately
 						return <InvisibleSpacer />
