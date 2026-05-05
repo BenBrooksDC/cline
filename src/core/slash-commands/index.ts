@@ -10,11 +10,14 @@ import {
 	bootstrapToolResponse,
 	condenseToolResponse,
 	deepPlanningToolResponse,
+	diagramToolResponse,
 	explainChangesToolResponse,
 	exportChatToolResponse,
 	installToolResponse,
+	migrateToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
+	personaToolResponse,
 	preCommitReviewToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
@@ -73,6 +76,9 @@ export async function parseSlashCommands(
 		"template", // LuciBuild fork: save or run a reusable workflow template
 		"pre-commit-review", // LuciBuild fork: senior-eng review of uncommitted diff
 		"tdd", // LuciBuild fork: strict spec → failing test → minimum code → pass workflow
+		"migrate", // LuciBuild fork: known multi-file migrations
+		"diagram", // LuciBuild fork: generate Mermaid/PlantUML architecture diagrams
+		"persona", // LuciBuild fork: switch agent persona for the task
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -94,6 +100,9 @@ export async function parseSlashCommands(
 		template: templateToolResponse(), // LuciBuild fork
 		"pre-commit-review": preCommitReviewToolResponse(), // LuciBuild fork
 		tdd: tddToolResponse(), // LuciBuild fork
+		migrate: migrateToolResponse(), // LuciBuild fork
+		diagram: diagramToolResponse(), // LuciBuild fork
+		persona: personaToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

@@ -84,6 +84,24 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "migrate",
+		description: "Multi-file automated migration (callbacks→async, JS→TS, Mocha→Vitest, etc.) (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "diagram",
+		description: "Generate Mermaid/PlantUML architecture diagrams from the codebase (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "persona",
+		description: "Switch the agent's operating persona for this task (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands

@@ -2,6 +2,90 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /migrate slash command. Multi-file automated migrations
+ * for known transformations.
+ */
+export const migrateToolResponse = () =>
+	`<explicit_instructions type="migrate">
+The user wants you to perform a known multi-file migration. Common migration types:
+  - JS class components → React hooks
+  - JavaScript → TypeScript (with type inference)
+  - CommonJS (require/module.exports) → ESM (import/export)
+  - Mocha → Vitest (or Jest → Vitest)
+  - callbacks → async/await
+  - moment.js → date-fns or dayjs
+  - axios → fetch
+  - Express → Fastify
+  - Python 2 → Python 3
+  - sync I/O → async I/O
+
+Workflow:
+1. Identify the migration type from the user's request. If ambiguous, ask one clarifying question with concrete options.
+2. Scope the work: list every file that will change. Use search_files / list_files to enumerate. Show the count.
+3. Get explicit approval ("Proceed with migration of N files?") via ask_followup_question with ["Proceed", "Show one file as preview first", "Cancel"].
+4. If "preview first": pick a representative file, show before/after diff, get OK before proceeding to the full set.
+5. Execute file-by-file. Use replace_in_file for surgical changes; use write_to_file only when refactor scope is large enough that diffs would be unreadable.
+6. After every ~5 files, run the project's typecheck/test command to catch regressions early; if anything fails, STOP and report.
+7. At the end: summary of files changed, any tests that newly fail, suggested manual follow-ups.
+
+Hard rules:
+- NEVER migrate code under test/ without also adapting tests.
+- NEVER drop existing functionality silently.
+- If a file has a particularly unusual pattern, surface it for human review instead of guessing.
+
+Below is the user's migration request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /diagram slash command. Generates Mermaid/PlantUML
+ * architecture diagrams from the current workspace.
+ */
+export const diagramToolResponse = () =>
+	`<explicit_instructions type="diagram">
+Generate an architecture diagram from the current workspace.
+
+Workflow:
+1. Ask which diagram type (or infer from the request):
+   - System-context (services + external dependencies)
+   - Module-graph (which files import which)
+   - Class diagram (for OOP code)
+   - Sequence (for a specific flow the user names)
+   - Database ER (if SQL/Prisma/drizzle schemas exist)
+2. Use list_files + read_file to read enough of the codebase to populate the diagram. Don't read everything — sample strategically.
+3. Output: Mermaid syntax (preferred) or PlantUML if the user specified. Wrap in a code fence so VS Code can render it.
+4. Save to \`docs/diagrams/<type>-<date>.md\` using write_to_file. Offer to update an existing file if one exists.
+5. End with one paragraph explaining the diagram's key relationships.
+
+Don't over-detail. A diagram with 100 nodes is unreadable; aim for ≤25 nodes per diagram. If the system is bigger, propose a layered set (high-level + drill-downs).
+
+Below is the user's diagram request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /persona slash command. Switches the agent's persona for the
+ * remainder of the task. Personas tune the voice + risk tolerance + review depth.
+ */
+export const personaToolResponse = () =>
+	`<explicit_instructions type="persona">
+Switch your operating persona for the rest of this task. Available personas:
+
+  **senior-backend** — emphasize correctness, edge cases, error handling, observability. Prefer explicit over magical. Skeptical of dependencies.
+  **senior-frontend** — emphasize accessibility, perf, semantic HTML, prop API design. Skeptical of premature state.
+  **security-reviewer** — read code looking for footguns. Default to "what could a malicious input do here?". Don't be productive about new features; focus on hardening.
+  **junior-mentor** — explain reasoning at every step. Show the small example before the abstraction. Pair-programming voice.
+  **qa-skeptic** — for every claim of "this works", ask "what's the edge case that breaks it?". Push for test coverage.
+  **shipping-pm** — bias toward shipping fast. Cut scope. Ask "what's the smallest version that solves the user's actual problem?".
+  **architect** — zoom out. Identify the system-design tradeoff before diving into implementation. Skeptical of feature work that compounds tech debt.
+
+Apply the chosen persona for the rest of this task only (revert at task end). State which persona you've adopted in your first response, then operate accordingly.
+
+Below is the user's persona-switch request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /pre-commit-review slash command. Reads the user's local
  * uncommitted diff and gives senior-engineer feedback BEFORE they push.
  * Different from /review-pr (which reviews someone else's PR).
