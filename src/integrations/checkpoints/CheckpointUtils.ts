@@ -5,7 +5,9 @@ import { HostProvider } from "@/hosts/host-provider"
 import { ShowMessageType } from "@/shared/proto/host/window"
 import { getCwd, getDesktopDir } from "@/utils/path"
 
-const CHECKPOINT_ALLOWLIST_PATH = path.join(os.homedir(), ".claude", "cline-cc-checkpoint-allowlist.json")
+const CHECKPOINT_ALLOWLIST_PATH = path.join(os.homedir(), ".claude", "lucibuild-checkpoint-allowlist.json")
+// One-time migration: rename old cline-cc-checkpoint-allowlist.json on first read
+const LEGACY_CHECKPOINT_ALLOWLIST_PATH = path.join(os.homedir(), ".claude", "cline-cc-checkpoint-allowlist.json")
 
 /**
  * Cline-CC fork: read the user's checkpoint-allowlist to decide whether a
@@ -13,6 +15,15 @@ const CHECKPOINT_ALLOWLIST_PATH = path.join(os.homedir(), ".claude", "cline-cc-c
  * explicitly approved by the user.
  */
 async function isCheckpointAllowlisted(workspacePath: string): Promise<boolean> {
+	// One-time migration of legacy filename
+	try {
+		const fs = await import("fs")
+		if (fs.existsSync(LEGACY_CHECKPOINT_ALLOWLIST_PATH) && !fs.existsSync(CHECKPOINT_ALLOWLIST_PATH)) {
+			fs.renameSync(LEGACY_CHECKPOINT_ALLOWLIST_PATH, CHECKPOINT_ALLOWLIST_PATH)
+		}
+	} catch {
+		/* ignore */
+	}
 	try {
 		const raw = await readFile(CHECKPOINT_ALLOWLIST_PATH, "utf-8")
 		const data = JSON.parse(raw) as { paths?: string[] }
@@ -53,7 +64,7 @@ async function promptToApproveCheckpointDir(workspacePath: string, label: string
 	try {
 		const response = await HostProvider.window.showMessage({
 			type: ShowMessageType.WARNING,
-			message: `Cline-CC: ${label} is a protected directory. Allow checkpoints (auto-git snapshots) here for this folder?`,
+			message: `LuciBuild: ${label} is a protected directory. Allow checkpoints (auto-git snapshots) here for this folder?`,
 			options: {
 				modal: false,
 				items: ["Approve and remember", "Cancel"],

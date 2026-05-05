@@ -1,0 +1,110 @@
+LuciBuild VS Code Extension
+Copyright (c) 2026 Lucilead
+
+This product is distributed under the terms of the Apache License 2.0
+(see LICENSE file at the root of this repository).
+
+================================================================================
+DERIVATIVE WORK ATTRIBUTION
+================================================================================
+
+This product is a derivative work based on Cline:
+
+    Cline (https://github.com/cline/cline)
+    Copyright (c) Cline contributors
+    Licensed under the Apache License 2.0
+
+The original Cline source code is available at https://github.com/cline/cline.
+LuciBuild is NOT affiliated with, endorsed by, or sponsored by Cline or its
+contributors.
+
+================================================================================
+SUMMARY OF MODIFICATIONS (per Apache 2.0 §4(b))
+================================================================================
+
+Files added by Lucilead:
+
+    src/core/prompts/system-prompt/claude-code-loader.ts
+        Auto-loads ~/CLAUDE.md and an "always-on terse voice" directive into
+        every session's system prompt.
+
+    src/core/prompts/system-prompt/memory-loader.ts
+        Auto-loads the user's Claude-Code-style memory index from
+        ~/.claude/projects/-Users-<user>/memory/MEMORY.md.
+
+    src/core/prompts/system-prompt/tools/llm_relay.ts
+    src/core/task/tools/handlers/LLMRelayToolHandler.ts
+        New `llm_relay` tool that delegates work to external LLMs (GPT,
+        Gemini, Grok) via the user's local relay CLI.
+
+    src/core/usage/pricing.ts
+    src/core/usage/UsageTracker.ts
+    src/core/usage/error-classifier.ts
+        Cross-provider token-spend tracking, per-provider budgets, drain
+        alerts, classification of known API errors with fallback hints.
+
+    src/hosts/vscode/cline-cc-status-bar.ts
+        VS Code status bar item showing live spend.
+
+    webview-ui/src/components/chat/task-header/buttons/SettingsGearButton.tsx
+        Per-chat settings gear that opens the auto-approve modal.
+
+Files modified by Lucilead:
+
+    src/shared/tools.ts
+        Added LLM_RELAY tool enum value.
+
+    src/core/assistant-message/index.ts
+        Added `model`, `prompt_file`, `output_file` to toolParamNames.
+
+    src/core/prompts/system-prompt/index.ts
+        getSystemPrompt now appends CLAUDE.md and memory index.
+
+    src/core/prompts/system-prompt/tools/init.ts
+        Registers llm_relay tool variants.
+
+    src/core/prompts/system-prompt/variants/*/config.ts (12 files)
+        Added LLM_RELAY to each variant's tool list.
+
+    src/core/task/tools/ToolExecutorCoordinator.ts
+        Registers LLMRelayToolHandler.
+
+    src/core/task/index.ts
+        onUsageChunk now forwards to UsageTracker; failed-API-request path
+        appends classifier-derived fallback hints.
+
+    src/core/slash-commands/index.ts
+    src/core/prompts/commands.ts
+    src/shared/slashCommands.ts
+        Added /remember slash command for end-of-task memory write-back.
+
+    src/integrations/checkpoints/CheckpointUtils.ts
+        Per-path approval prompt for checkpoints in normally-protected dirs
+        (Desktop, Documents, Downloads, home), persisted to
+        ~/.claude/lucibuild-checkpoint-allowlist.json.
+
+    src/extension.ts
+        Registers the LuciBuild status bar in activate().
+
+    package.json, README.md
+        Renamed from "Cline" to "LuciBuild"; metadata updated.
+
+================================================================================
+TELEMETRY
+================================================================================
+
+Upstream Cline ships with optional PostHog telemetry. LuciBuild defaults this
+OFF; users may explicitly opt in via the standard Cline telemetry setting if
+they choose. No data is sent to Lucilead servers from this extension.
+
+================================================================================
+TRADEMARKS
+================================================================================
+
+"Cline" and the Cline logo are property of the Cline contributors. LuciBuild
+does not use the Cline name in its product name, marketing, or branding.
+
+"Claude" and "Claude Code" are trademarks of Anthropic. LuciBuild is not
+affiliated with Anthropic. The string "claude-code-loader.ts" in this
+codebase refers to the user's local ~/CLAUDE.md convention and is not a
+product name.

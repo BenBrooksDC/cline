@@ -6,8 +6,10 @@ import * as path from "path"
 import { Logger } from "@/shared/services/Logger"
 import { calculateCost, inferProvider, type ProviderId } from "./pricing"
 
-const USAGE_LOG_PATH = path.join(os.homedir(), ".claude", "cline-cc-usage.jsonl")
+const USAGE_LOG_PATH = path.join(os.homedir(), ".claude", "lucibuild-usage.jsonl")
 const BUDGETS_PATH = path.join(os.homedir(), ".claude", "budgets.json")
+// Legacy path: silently migrate cline-cc-usage.jsonl on first launch so users don't lose history.
+const LEGACY_USAGE_LOG_PATH = path.join(os.homedir(), ".claude", "cline-cc-usage.jsonl")
 
 const DEFAULT_BUDGETS: BudgetsConfig = {
 	providers: {
@@ -54,7 +56,7 @@ interface AccumulatedSpend {
 }
 
 /**
- * Cline-CC fork: tracks every LLM API call (Cline-internal + LLM Relay) and
+ * LuciBuild fork: tracks every LLM API call (Cline-internal + LLM Relay) and
  * exposes live spend totals + budget enforcement. Logs to ~/.claude/cline-cc-usage.jsonl.
  */
 export class UsageTracker {
@@ -69,12 +71,28 @@ export class UsageTracker {
 
 	private constructor() {
 		this.refreshDateBuckets()
+		this.migrateLegacyLog()
 		this.loadBudgets().catch(() => {
 			/* fall back to defaults */
 		})
 		this.loadTodayFromLog().catch(() => {
 			/* empty start is fine */
 		})
+	}
+
+	/**
+	 * One-time migration: if the old ~/.claude/cline-cc-usage.jsonl exists and
+	 * the new lucibuild-usage.jsonl does not, rename the old to the new.
+	 * Runs synchronously on first instantiation; failures are silent.
+	 */
+	private migrateLegacyLog(): void {
+		try {
+			if (fs.existsSync(LEGACY_USAGE_LOG_PATH) && !fs.existsSync(USAGE_LOG_PATH)) {
+				fs.renameSync(LEGACY_USAGE_LOG_PATH, USAGE_LOG_PATH)
+			}
+		} catch {
+			/* ignore */
+		}
 	}
 
 	static get(): UsageTracker {
@@ -308,12 +326,12 @@ export class UsageTracker {
 			return
 		}
 		this.lastDrainAlertTs = Date.now()
-		const msg = `Cline-CC: ${provider} daily budget will drain in ${minutesRemaining.toFixed(0)}min at current burn rate ($${burn.toFixed(4)}/min).`
+		const msg = `LuciBuild: ${provider} daily budget will drain in ${minutesRemaining.toFixed(0)}min at current burn rate ($${burn.toFixed(4)}/min).`
 		Logger.warn(msg)
 		// macOS notification (best effort, no error if not on mac)
 		try {
 			const escaped = msg.replace(/"/g, "'")
-			exec(`osascript -e 'display notification "${escaped}" with title "Cline-CC Drain Alert"'`)
+			exec(`osascript -e 'display notification "${escaped}" with title "LuciBuild Drain Alert"'`)
 		} catch {
 			/* ignore */
 		}

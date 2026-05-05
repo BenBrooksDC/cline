@@ -2056,7 +2056,17 @@ export class Task {
 					}
 				}
 
-				const streamingFailedMessage = clineError.serialize()
+				// LuciBuild fork: classify the error and append a suggested fallback hint
+				let streamingFailedMessage = clineError.serialize()
+				try {
+					const { buildErrorHintSuffix } = await import("../usage/error-classifier")
+					const hint = buildErrorHintSuffix(clineError.message ?? "", model.id)
+					if (hint) {
+						streamingFailedMessage = streamingFailedMessage + hint
+					}
+				} catch {
+					/* never let classifier issues block error surfacing */
+				}
 
 				// Update the 'api_req_started' message to reflect final failure before asking user to manually retry
 				const lastApiReqStartedIndex = findLastIndex(

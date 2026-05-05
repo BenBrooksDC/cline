@@ -2,13 +2,13 @@ import * as vscode from "vscode"
 import { UsageTracker } from "@/core/usage/UsageTracker"
 
 /**
- * Cline-CC fork: VS Code status bar item that displays live cross-provider spend.
+ * LuciBuild fork: VS Code status bar item that displays live cross-provider spend.
  * Refreshes every 5s. Click → opens the usage log file for inspection.
  */
 export function registerUsageStatusBar(context: vscode.ExtensionContext): void {
 	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
-	item.command = "cline-cc.showUsageLog"
-	item.tooltip = "Cline-CC: per-provider spend today. Click to open the usage log."
+	item.command = "lucibuild.showUsageLog"
+	item.tooltip = "LuciBuild: per-provider spend today. Click to open the usage log."
 	item.show()
 
 	const updateLabel = () => {
@@ -31,7 +31,7 @@ export function registerUsageStatusBar(context: vscode.ExtensionContext): void {
 
 		const icon = level === "over" ? "$(error)" : level === "warning" ? "$(warning)" : "$(graph)"
 		const burnStr = burn > 0 ? ` ($${burn.toFixed(3)}/min)` : ""
-		item.text = `${icon} Cline-CC $${total.toFixed(2)}${burnStr}`
+		item.text = `${icon} LuciBuild $${total.toFixed(2)}${burnStr}`
 
 		if (level === "over") {
 			item.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground")
@@ -41,22 +41,22 @@ export function registerUsageStatusBar(context: vscode.ExtensionContext): void {
 			item.backgroundColor = undefined
 		}
 
-		item.tooltip = "Cline-CC daily spend\n" + tracker.getSummary() + "\n\nClick to open usage log."
+		item.tooltip = "LuciBuild daily spend\n" + tracker.getSummary() + "\n\nClick to open usage log."
 	}
 
 	updateLabel()
 	const timer = setInterval(updateLabel, 5000)
 
-	const showUsageLog = vscode.commands.registerCommand("cline-cc.showUsageLog", async () => {
+	const showUsageLog = vscode.commands.registerCommand("lucibuild.showUsageLog", async () => {
 		const path = require("path") as typeof import("path")
 		const os = require("os") as typeof import("os")
-		const logPath = path.join(os.homedir(), ".claude", "cline-cc-usage.jsonl")
+		const logPath = path.join(os.homedir(), ".claude", "lucibuild-usage.jsonl")
 		try {
 			const doc = await vscode.workspace.openTextDocument(logPath)
 			await vscode.window.showTextDocument(doc, { preview: false })
 		} catch {
 			vscode.window.showInformationMessage(
-				"No usage log yet. It will be created at ~/.claude/cline-cc-usage.jsonl after the first API call.",
+				"No usage log yet. It will be created at ~/.claude/lucibuild-usage.jsonl after the first API call.",
 			)
 		}
 	})

@@ -1,6 +1,51 @@
 import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
+/**
+ * LuciBuild fork: /remember slash command. Mirrors Claude Code's auto-memory:
+ * agent scans the current conversation, proposes memory entries for non-obvious
+ * facts (user prefs, project state, reference links, feedback), and writes them
+ * via write_to_file to the user's memory directory.
+ */
+export const rememberToolResponse = () =>
+	`<explicit_instructions type="remember">
+The user wants you to extract durable information from this conversation and save it to their long-term memory system at \`~/.claude/projects/-Users-<username>/memory/\` (you can derive <username> from \`os.homedir()\` basename).
+
+The memory system has 4 types of entries:
+1. **user** — about the user's role, goals, knowledge, preferences (e.g., expertise areas, projects they own)
+2. **feedback** — guidance on how to approach work (corrections, validated approaches, hard rules with reasons)
+3. **project** — ongoing initiatives, goals, decisions, deadlines, project state (with WHY)
+4. **reference** — pointers to where information lives in external systems (Linear, GitHub, dashboards)
+
+DO NOT save:
+- Code patterns or architecture (derivable from the codebase)
+- Recent git changes (in git log)
+- Debugging fix recipes (the fix is in the code)
+- Anything already in CLAUDE.md
+- Ephemeral conversation state
+
+Workflow you must follow:
+1. Identify 0–5 candidate memories from THIS conversation. Quality > quantity. If nothing is genuinely worth saving, say so and stop.
+2. For each candidate, propose:
+   - File name following the pattern \`<type>_<short_name>.md\` (e.g. \`feedback_terse_replies.md\`, \`project_lucibuild_pricing.md\`)
+   - Frontmatter:
+     \`\`\`
+     ---
+     name: <short title>
+     description: <one-line hook used to decide relevance in future conversations>
+     type: <user|feedback|project|reference>
+     ---
+     \`\`\`
+   - Body: the rule/fact, with **Why:** and **How to apply:** lines for feedback/project types.
+3. Present all candidates to the user as a numbered list with proposed file paths. Ask which to save (e.g., "1, 3" or "all" or "none").
+4. After confirmation, use write_to_file for each approved candidate, then update \`~/.claude/projects/-Users-<username>/memory/MEMORY.md\` by appending a single-line index entry: \`- [<filename>](<filename>) — <one-line hook>\`.
+
+Be honest if there is nothing surprising or non-obvious to save — saying "nothing worth committing to memory from this thread" is a valid outcome.
+
+Below is the user's most recent message (likely empty or a clarification):
+</explicit_instructions>\n
+`
+
 export const newTaskToolResponse = (willUseNativeTools: boolean) => {
 	const xmlExample = `
 Example:

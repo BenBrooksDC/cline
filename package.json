@@ -1,8 +1,8 @@
 {
-	"name": "claude-dev",
-	"displayName": "Cline (Claude Code Edition)",
-	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
-	"version": "3.82.0-cc1",
+	"name": "lucibuild",
+	"displayName": "LuciBuild",
+	"description": "LuciBuild VS Code extension — agentic coding with cross-provider token monitoring. Derived from Cline (Apache-2.0).",
+	"version": "0.1.0",
 	"icon": "assets/icons/icon.png",
 	"workspaces": [
 		".",
@@ -15,12 +15,7 @@
 		"name": "Cline Bot Inc."
 	},
 	"license": "Apache-2.0",
-	"publisher": "cline-cc-fork",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/cline/cline"
-	},
-	"homepage": "https://cline.bot",
+	"publisher": "lucilead",
 	"categories": [
 		"AI",
 		"Chat",
@@ -647,5 +642,9 @@
 		],
 		"all": true,
 		"exclude-after-remap": true
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/BenBrooksDC/cline.git"
 	}
 }
