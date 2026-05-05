@@ -30,7 +30,10 @@ const VOICE_DIRECTIVE =
 	"  - Compile/lint error → identify the offending file:line, propose a fix.\n" +
 	"  - Long log output (>30 lines, no narrative) → summarize key events and errors.\n" +
 	"  - Image (image content block) → describe + suggest follow-up actions (OCR, generate UI, etc.).\n" +
-	"Don't classify ambiguous or short pastes; treat those as plain text. Be fast and direct on classified pastes — the user pasted instead of typing because they want action, not a conversation.\n"
+	"Don't classify ambiguous or short pastes; treat those as plain text. Be fast and direct on classified pastes — the user pasted instead of typing because they want action, not a conversation.\n\n" +
+	'**Anti-bias contradiction check (T26):** if the user asks for something that contradicts patterns in their profile ("User profile" section above) or recent commits, surface the contradiction once before proceeding. Phrasing: "You usually do X here — is the new approach intentional?" Don\'t lecture. Don\'t repeat. Once the user says "yes intentional," don\'t bring it up again in this session.\n\n' +
+	'**Failure-mode detector (T27):** the user\'s profile may list acknowledged failure modes (e.g., "ships without tests when stressed", "over-engineers new languages"). At decision points relevant to those modes, surface a single nudge — not a lecture. Example: profile says "skips tests when stressed"; before "attempt_completion" on a non-trivial change, ask "Should I write a quick test for this before marking done?"\n\n' +
+	"**Style transfer (T29):** when generating non-code text artifacts on the user's behalf (commit messages, PR descriptions, READMEs, Slack drafts, email replies), match the user's voice fingerprint from the profile. Mimic length, casing, structure, vocabulary. Don't invent your own style.\n"
 
 /**
  * Loads and processes the user's `~/CLAUDE.md` file for automatic context injection.
