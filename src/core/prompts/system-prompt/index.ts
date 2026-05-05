@@ -1,3 +1,5 @@
+import { loadGitContext } from "@/core/usage/GitContext"
+import { loadLastSessionSummary } from "@/core/usage/SessionContinuity"
 import { loadClaudeCodeContext } from "./claude-code-loader"
 import { loadClineCodeMemoryIndex } from "./memory-loader"
 import { PromptRegistry } from "./registry/PromptRegistry"
@@ -24,12 +26,15 @@ export { validateVariant } from "./variants/variant-validator"
  */
 export async function getSystemPrompt(context: SystemPromptContext) {
 	const registry = PromptRegistry.getInstance()
-	const [basePrompt, claudeCodeContext, memoryIndex] = await Promise.all([
+	const workspacePath = process.env.PWD || ""
+	const [basePrompt, claudeCodeContext, memoryIndex, sessionSummary, gitContext] = await Promise.all([
 		registry.get(context),
 		loadClaudeCodeContext(),
 		loadClineCodeMemoryIndex(),
+		loadLastSessionSummary(workspacePath),
+		loadGitContext(workspacePath),
 	])
-	const systemPrompt = basePrompt + claudeCodeContext + memoryIndex
+	const systemPrompt = basePrompt + claudeCodeContext + memoryIndex + sessionSummary + gitContext
 	const tools = context.enableNativeToolCalls ? registry.nativeTools : undefined
 	return { systemPrompt, tools }
 }

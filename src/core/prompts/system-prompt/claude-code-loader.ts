@@ -20,7 +20,17 @@ const VOICE_DIRECTIVE =
 	"Use the `/install <description>` slash command, OR proactively suggest an install when you hit a capability wall. " +
 	"Before installing anything, ALWAYS surface a dry-run preview (package, command, what it adds) and get explicit approval via ask_followup_question. " +
 	"For MCP servers, consult the curated registry at `src/core/tools/mcp-registry.json` (in this fork's repo) — " +
-	"it lists 15+ vetted servers (filesystem, github, postgres, sqlite, slack, puppeteer, brave-search, fetch, sequential-thinking, memory, linear, sentry, browser-tools, stripe) with install commands and capabilities.\n"
+	"it lists 15+ vetted servers (filesystem, github, postgres, sqlite, slack, puppeteer, brave-search, fetch, sequential-thinking, memory, linear, sentry, browser-tools, stripe) with install commands and capabilities.\n\n" +
+	"**Smart paste:** if the user's message looks like a paste of structured content (no surrounding prose), classify it and act WITHOUT asking for clarification:\n" +
+	"  - Stack trace (matches `Traceback (most recent call last):`, `at <fn>(<file>:<line>)`, `Error:`, etc.) → debug it, pinpoint the file/line, propose a fix.\n" +
+	"  - URL alone → fetch the page (web_fetch) and summarize.\n" +
+	"  - CSV / TSV (header row + comma/tab data) → infer schema, ask if they want a parser/import script.\n" +
+	"  - JSON blob → format, validate, suggest a TypeScript/Python type for it.\n" +
+	"  - SQL query → explain, suggest indexes, or run if the user has a DB MCP server installed.\n" +
+	"  - Compile/lint error → identify the offending file:line, propose a fix.\n" +
+	"  - Long log output (>30 lines, no narrative) → summarize key events and errors.\n" +
+	"  - Image (image content block) → describe + suggest follow-up actions (OCR, generate UI, etc.).\n" +
+	"Don't classify ambiguous or short pastes; treat those as plain text. Be fast and direct on classified pastes — the user pasted instead of typing because they want action, not a conversation.\n"
 
 /**
  * Loads and processes the user's `~/CLAUDE.md` file for automatic context injection.

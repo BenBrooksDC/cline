@@ -228,6 +228,27 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 			{ message: result },
 		)
 
+		// LuciBuild fork: end the long-task wall-time tracker → fires macOS notification if elapsed > threshold
+		import("../../../usage/LongTaskNotifier")
+			.then(({ LongTaskNotifier }) => {
+				LongTaskNotifier.get().end(config.taskId, "completed")
+			})
+			.catch(() => {
+				/* never let notifier issues break completion */
+			})
+
+		// LuciBuild fork: persist a session summary so the next session in this
+		// workspace can auto-load it (T17 pair-programming continuity).
+		try {
+			const { writeSessionSummary } = await import("../../../usage/SessionContinuity")
+			const workspacePath = process.env.PWD || ""
+			if (workspacePath && result) {
+				await writeSessionSummary(workspacePath, config.taskId, result)
+			}
+		} catch {
+			/* never let session-continuity errors break completion */
+		}
+
 		const { response, text, images, files: completionFiles } = await config.callbacks.ask("completion_result", "", false)
 		const prefix = "[attempt_completion] Result: Done"
 		if (response === "yesButtonClicked") {

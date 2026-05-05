@@ -357,6 +357,15 @@ export class Task {
 
 		this.taskId = taskId
 
+		// LuciBuild fork: start the long-task wall-time tracker
+		import("../usage/LongTaskNotifier")
+			.then(({ LongTaskNotifier }) => {
+				LongTaskNotifier.get().start(taskId, task ?? historyItem?.task ?? "")
+			})
+			.catch(() => {
+				/* never let notifier issues break a task */
+			})
+
 		// Initialize taskId first
 		if (historyItem) {
 			this.ulid = historyItem.ulid ?? ulid()
