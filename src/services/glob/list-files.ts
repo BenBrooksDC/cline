@@ -33,10 +33,17 @@ function isRestrictedPath(absolutePath: string): boolean {
 		return true
 	}
 
-	const homeDir = os.homedir()
-	const isHomeDir = arePathsEqual(absolutePath, homeDir)
-	if (isHomeDir) {
-		return true
+	// LuciBuild fork: upstream Cline blocks listing the home directory because of
+	// performance concerns. We allow it because LuciBuild is positioned for
+	// multi-project / cross-workspace work where searching all of ~ is common.
+	// The recursive limit (200 files) plus gitignore filtering keep this safe.
+	// Set LUCIBUILD_RESTRICT_HOME=1 to restore upstream behavior.
+	if (process.env.LUCIBUILD_RESTRICT_HOME === "1") {
+		const homeDir = os.homedir()
+		const isHomeDir = arePathsEqual(absolutePath, homeDir)
+		if (isHomeDir) {
+			return true
+		}
 	}
 
 	return false
@@ -199,10 +206,7 @@ async function globbyLevelByLevel(limit: number, options?: Options) {
 					// Escape backslashes and parentheses in the path to prevent glob pattern interpretation.
 					// This is crucial for NextJS folder naming conventions which use parentheses like (auth), (dashboard).
 					// Without escaping, glob treats backslashes as escapes and parentheses as special pattern grouping characters.
-					const escapedDir = relativeDir
-						.replace(/\\/g, "\\\\")
-						.replace(/\(/g, "\\(")
-						.replace(/\)/g, "\\)")
+					const escapedDir = relativeDir.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)")
 					queue.push(`${escapedDir}/*`)
 				}
 			}
