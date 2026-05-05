@@ -315,6 +315,13 @@ export class ApplyPatchHandler implements IFullyManagedTool {
 					return "The user denied this patch operation."
 				}
 
+				// LuciBuild Round T (L2): pre-tool checkpoint, before applying.
+				try {
+					await config.callbacks.saveCheckpoint()
+				} catch (e) {
+					void e
+				}
+
 				// Save the changes for this file after approval
 				const fileResult = await this.saveFileChange(change, operationPath)
 				if (fileResult) {

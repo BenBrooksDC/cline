@@ -13,6 +13,7 @@ import type { IFullyManagedTool } from "../ToolExecutorCoordinator"
 import type { ToolValidator } from "../ToolValidator"
 import type { TaskConfig } from "../types/TaskConfig"
 import type { StronglyTypedUIHelpers } from "../types/UIHelpers"
+import { classifyCommand } from "../utils/blastRadius"
 import { applyModelContentFixes } from "../utils/ModelContentProcessor"
 import { ToolResultUtils } from "../utils/ToolResultUtils"
 
@@ -192,6 +193,14 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 
 		let didAutoApprove = false
 
+		// LuciBuild Round T (GT4): blast-radius gate. If the command matches a
+		// known-destructive pattern (rm -rf, git reset --hard, dropdb, etc.),
+		// disable auto-approve regardless of user settings — these always go
+		// through manual approval. User can edit ~/.claude/destructive-commands.json
+		// to add or disable patterns.
+		const blast = classifyCommand(actualCommand)
+		const blastForcesManual = blast.destructive
+
 		// If the model says this command is safe and auto approval for safe commands is true, execute the command
 		// If the model says the command is risky, but *BOTH* auto approve settings are true, execute the command
 		const autoApproveResult = config.autoApprover?.shouldAutoApproveTool(block.name)
@@ -222,9 +231,10 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 		}
 
 		if (
-			config.isSubagentExecution ||
-			(!requiresApprovalPerLLM && autoApproveSafe) ||
-			(requiresApprovalPerLLM && autoApproveSafe && autoApproveAll)
+			!blastForcesManual &&
+			(config.isSubagentExecution ||
+				(!requiresApprovalPerLLM && autoApproveSafe) ||
+				(requiresApprovalPerLLM && autoApproveSafe && autoApproveAll))
 		) {
 			// Auto-approve flow
 			if (!config.isSubagentExecution) {
@@ -249,9 +259,12 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 				config.autoApprovalSettings.enableNotifications,
 			)
 
+			const blastBanner = blastForcesManual
+				? `\n\n⚠️ LuciBuild flagged this as destructive (${blast.matchedPattern}). Auto-approve is bypassed for this command. ${blast.advice ?? ""}`
+				: ""
 			const didApprove = await ToolResultUtils.askApprovalAndPushFeedback(
 				"command",
-				actualCommand + `${autoApproveSafe && requiresApprovalPerLLM ? COMMAND_REQ_APP_STRING : ""}`,
+				actualCommand + `${autoApproveSafe && requiresApprovalPerLLM ? COMMAND_REQ_APP_STRING : ""}` + blastBanner,
 				config,
 			)
 			if (!didApprove) {
@@ -309,6 +322,15 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 		if (executionDir !== config.cwd) {
 			// Use && to chain commands so they run in sequence
 			finalCommand = `cd "${executionDir}" && ${actualCommand}`
+		}
+
+		// LuciBuild Round T (L2): pre-tool checkpoint. Commands can modify files
+		// in unpredictable ways (sed, npm install, git checkout, mv), so we
+		// snapshot before exec so the user can revert.
+		try {
+			await config.callbacks.saveCheckpoint()
+		} catch (e) {
+			void e
 		}
 
 		// LuciBuild Round T (GT5): tool-action audit log.

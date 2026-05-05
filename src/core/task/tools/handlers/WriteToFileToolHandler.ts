@@ -21,6 +21,7 @@ import type { TaskConfig } from "../types/TaskConfig"
 import type { StronglyTypedUIHelpers } from "../types/UIHelpers"
 import { captureAccepted, captureRejected, getModelInfo } from "../utils/AiOutputTelemetry"
 import { applyModelContentFixes } from "../utils/ModelContentProcessor"
+import { checkProtectedRanges, formatViolations } from "../utils/protectedRanges"
 import { ToolDisplayUtils } from "../utils/ToolDisplayUtils"
 import { ToolResultUtils } from "../utils/ToolResultUtils"
 
@@ -374,6 +375,31 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 
 			// Mark the file as edited by Cline
 			config.services.fileContextTracker.markFileAsEditedByCline(relPath)
+
+			// LuciBuild Round T (GT6): protected-range check. If the original
+			// file declared LUCIBUILD-PROTECT-START..-END or "DO NOT EDIT" lines
+			// AND the proposed content modifies them, refuse the edit and surface
+			// a clear error to the agent.
+			const originalText = config.services.diffViewProvider.originalContent ?? ""
+			const violations = checkProtectedRanges(originalText, newContent)
+			if (violations.length > 0) {
+				auditOutcome = "rejected"
+				auditError = "protected_range_violation"
+				await config.services.diffViewProvider.revertChanges()
+				await config.services.diffViewProvider.reset()
+				return formatViolations(violations, relPath)
+			}
+
+			// LuciBuild Round T (L2): pre-tool checkpoint. Commit shadow-git BEFORE
+			// the write so revert can target "state immediately before this edit."
+			// Errors here are non-fatal — losing one pre-checkpoint shouldn't block
+			// the user's edit.
+			try {
+				await config.callbacks.saveCheckpoint()
+			} catch (e) {
+				// non-blocking
+				void e
+			}
 
 			// Save the changes and get the result
 			const { newProblemsMessage, userEdits, autoFormattingEdits, finalContent } =
