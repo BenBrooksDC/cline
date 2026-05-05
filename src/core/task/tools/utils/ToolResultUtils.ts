@@ -139,7 +139,23 @@ export class ToolResultUtils {
 			await config.callbacks.say("user_feedback", text, images, files)
 		}
 
-		if (response !== "yesButtonClicked") {
+		const accepted = response === "yesButtonClicked"
+
+		// LuciBuild fork (T31): record this acceptance/rejection event for self-learning
+		try {
+			const { recordAcceptance } = await import("../../../usage/AcceptanceTracker")
+			recordAcceptance({
+				ts: new Date().toISOString(),
+				task_id: config.taskId ?? "unknown",
+				tool_name: typeof type === "string" ? type : String(type),
+				accepted,
+				preview: completeMessage.slice(0, 200),
+			})
+		} catch {
+			/* never let tracker issues block approval */
+		}
+
+		if (!accepted) {
 			// User pressed reject button or responded with a message, which we treat as a rejection
 			config.taskState.didRejectTool = true // Prevent further tool uses in this message
 			return false

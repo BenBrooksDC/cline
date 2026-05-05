@@ -1,3 +1,4 @@
+import { getAcceptanceSummary } from "@/core/usage/AcceptanceTracker"
 import { loadGitContext } from "@/core/usage/GitContext"
 import { loadLastSessionSummary } from "@/core/usage/SessionContinuity"
 import { loadUserProfile } from "@/core/usage/UserProfile"
@@ -36,7 +37,10 @@ export async function getSystemPrompt(context: SystemPromptContext) {
 		loadGitContext(workspacePath),
 		loadUserProfile(workspacePath),
 	])
-	const systemPrompt = basePrompt + claudeCodeContext + memoryIndex + sessionSummary + gitContext + userProfile
+	// T22 self-eval: inject acceptance-rate stats so the agent can self-correct
+	const acceptanceSummary = getAcceptanceSummary()
+	const systemPrompt =
+		basePrompt + claudeCodeContext + memoryIndex + sessionSummary + gitContext + userProfile + acceptanceSummary
 	const tools = context.enableNativeToolCalls ? registry.nativeTools : undefined
 	return { systemPrompt, tools }
 }

@@ -1,6 +1,7 @@
 import * as fs from "fs/promises"
 import * as os from "os"
 import * as path from "path"
+import { sortIndexByWeight } from "@/core/usage/MemoryWeights"
 import { Logger } from "@/shared/services/Logger"
 
 const MEMORY_INDEX_FILENAME = "MEMORY.md"
@@ -41,8 +42,16 @@ export async function loadClineCodeMemoryIndex(): Promise<string> {
 			return ""
 		}
 
-		// Truncate if oversized (defensive — typical index is ~3KB)
+		// LuciBuild fork (T33): sort the index entries by per-memory-file weight
+		// so the most "useful" memories render at the top.
 		let body = indexContent
+		try {
+			body = await sortIndexByWeight(body)
+		} catch {
+			/* fall back to original order on failure */
+		}
+
+		// Truncate if oversized (defensive — typical index is ~3KB)
 		if (Buffer.byteLength(body, "utf-8") > MAX_BYTES) {
 			body = Buffer.from(body, "utf-8").slice(0, MAX_BYTES).toString("utf-8") + TRUNCATION_MESSAGE
 		}
