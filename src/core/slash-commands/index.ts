@@ -19,6 +19,7 @@ import {
 	migrateToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
+	onboardToolResponse,
 	perfToolResponse,
 	personaToolResponse,
 	preCommitReviewToolResponse,
@@ -89,6 +90,7 @@ export async function parseSlashCommands(
 		"perf", // LuciBuild fork: performance profiling and optimization
 		"secret-rotate", // LuciBuild fork: detect hardcoded secrets, .env migration
 		"snippet", // LuciBuild fork: reusable code snippet library
+		"onboard", // LuciBuild fork: first-run repo onboarding brief
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -118,6 +120,7 @@ export async function parseSlashCommands(
 		perf: perfToolResponse(), // LuciBuild fork
 		"secret-rotate": secretRotateToolResponse(), // LuciBuild fork
 		snippet: snippetToolResponse(), // LuciBuild fork
+		onboard: onboardToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

@@ -2,6 +2,35 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /onboard slash command. First-run repo onboarding wizard.
+ */
+export const onboardToolResponse = () =>
+	`<explicit_instructions type="onboard">
+The user wants a "first day on the job" tour of the current codebase. Produce a structured onboarding brief.
+
+Workflow:
+1. **Survey:** use list_files (recursive) on the workspace root, list_code_definition_names on key directories, read README.md / CONTRIBUTING.md / package.json / pyproject.toml / Cargo.toml / go.mod.
+2. **Output a structured brief** with these sections:
+   - **What this project does** (1-paragraph plain-language summary)
+   - **Stack** (languages, frameworks, key deps)
+   - **Layout** (top-level dirs with one-line purpose each — skip node_modules/dist/etc.)
+   - **Entry points** (main scripts, server bootstrap files, CLI entry, etc.)
+   - **Key abstractions** (3-7 most important classes/modules an onboarder should learn first)
+   - **How to run it locally** (install + dev command, inferred from package.json / Makefile / README)
+   - **Where the tests live** + how to run them
+   - **Recent activity** (git log --oneline -20 to surface what's hot right now)
+   - **Conventions worth knowing** (any non-obvious style decisions visible in the code)
+   - **Things that look like tech debt** (TODOs, suspicious patterns) — brief, not exhaustive (use /debt for full)
+3. Save to \`docs/ONBOARDING.md\` (or update if exists). Print the path.
+4. Optionally propose a memory entry under type 'project' summarizing the project's purpose so future LuciBuild sessions in this dir know what they're working on.
+
+Keep it readable: aim for one printed page, not ten.
+
+Below is the user's onboard request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /a11y slash command. Accessibility + i18n audit.
  */
 export const a11yToolResponse = () =>

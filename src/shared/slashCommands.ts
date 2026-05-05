@@ -132,6 +132,12 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "onboard",
+		description: "First-run onboarding brief for the current repo (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands
