@@ -15,8 +15,10 @@ import {
 	installToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
+	preCommitReviewToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
+	tddToolResponse,
 	templateToolResponse,
 } from "../prompts/commands"
 import { StateManager } from "../storage/StateManager"
@@ -69,6 +71,8 @@ export async function parseSlashCommands(
 		"audit", // LuciBuild fork: dependency security audit
 		"export-chat", // LuciBuild fork: export conversation as markdown playbook
 		"template", // LuciBuild fork: save or run a reusable workflow template
+		"pre-commit-review", // LuciBuild fork: senior-eng review of uncommitted diff
+		"tdd", // LuciBuild fork: strict spec → failing test → minimum code → pass workflow
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -88,6 +92,8 @@ export async function parseSlashCommands(
 		audit: auditToolResponse(), // LuciBuild fork
 		"export-chat": exportChatToolResponse(), // LuciBuild fork
 		template: templateToolResponse(), // LuciBuild fork
+		"pre-commit-review": preCommitReviewToolResponse(), // LuciBuild fork
+		tdd: tddToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

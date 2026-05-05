@@ -2,6 +2,60 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /pre-commit-review slash command. Reads the user's local
+ * uncommitted diff and gives senior-engineer feedback BEFORE they push.
+ * Different from /review-pr (which reviews someone else's PR).
+ */
+export const preCommitReviewToolResponse = () =>
+	`<explicit_instructions type="pre-commit-review">
+Act as a senior code reviewer for the user's uncommitted local changes. Goal: catch issues before the commit/push, not after.
+
+Workflow:
+1. Run \`git diff --staged\` first; if empty, run \`git diff\` (unstaged). Combine if both have content.
+2. Read the diff. For each meaningful change, evaluate:
+   - **Correctness:** does the code do what its surrounding context implies?
+   - **Edge cases:** off-by-one, null/undefined, empty array, race conditions, error paths
+   - **Security:** secrets in diff, SQL injection, unsanitized input
+   - **Performance:** O(n²) where O(n) works, unnecessary re-renders, sync I/O on hot paths
+   - **Style fit:** matches the codebase conventions (compare to nearby existing code)
+   - **Test coverage:** does this need a test? Does the diff touch a tested module without updating tests?
+   - **Documentation:** is a public API changing without docs?
+3. **Output format:** group feedback by severity (must-fix / should-fix / nit). For each item: file:line — finding — suggested change. Be specific, not generic.
+4. After review, ask: "Want me to apply any of these as patches?" If yes, use replace_in_file. Otherwise stop.
+
+Be honest. If the diff looks good, say "looks good — ship it" and stop. Don't invent issues to seem thorough.
+
+Below is the user's pre-commit review request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /tdd slash command. Strict spec-to-code TDD workflow.
+ */
+export const tddToolResponse = () =>
+	`<explicit_instructions type="tdd">
+The user wants strict TDD: spec → failing test → minimum code to pass → refactor.
+
+Workflow (do NOT skip steps):
+1. **Read the spec** the user provided. If it's vague, ask ONE clarifying question max. Otherwise proceed.
+2. **Detect the test framework** in the workspace (Jest, Vitest, pytest, mocha, RSpec, cargo test, go test). Use the existing one; don't introduce a new one.
+3. **Write a failing test** that captures the spec's main expectation. Use write_to_file in the project's test directory. Filename matches the convention (e.g., \`<module>.test.ts\` or \`test_<module>.py\`).
+4. **Run the test.** Use execute_command with the project's test runner. Confirm it FAILS for the right reason (the test framework reports the assertion failure, not a syntax error in the test).
+5. **Write minimum code to pass.** Touch only what's needed. No premature abstraction.
+6. **Run the test again.** Confirm it PASSES.
+7. **Refactor (only if there's clear duplication or smell).** Keep tests green.
+8. **Repeat for the next spec increment** if the user gave multiple expectations. Otherwise call attempt_completion.
+
+Hard rules:
+- NEVER write production code without a failing test first.
+- NEVER claim "tests pass" without showing the actual test runner output.
+- NEVER skip step 4 (failing-for-the-right-reason). A test that fails because of a typo doesn't count.
+
+Below is the user's TDD request (their spec):
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /audit slash command. Runs a dependency security audit on the
  * current project (npm audit / pip-audit / cargo audit / etc.) and surfaces
  * vulnerabilities + suggested patches.

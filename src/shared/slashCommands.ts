@@ -72,6 +72,18 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "pre-commit-review",
+		description: "Senior-engineer review of your uncommitted diff before pushing (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "tdd",
+		description: "Strict spec → failing test → minimum code → pass workflow (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands
