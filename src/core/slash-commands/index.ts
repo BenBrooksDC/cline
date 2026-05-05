@@ -6,15 +6,18 @@ import { telemetryService } from "@/services/telemetry"
 import { Logger } from "@/shared/services/Logger"
 import { isNativeToolCallingConfig } from "@/utils/model-utils"
 import {
+	auditToolResponse,
 	bootstrapToolResponse,
 	condenseToolResponse,
 	deepPlanningToolResponse,
 	explainChangesToolResponse,
+	exportChatToolResponse,
 	installToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
+	templateToolResponse,
 } from "../prompts/commands"
 import { StateManager } from "../storage/StateManager"
 
@@ -63,6 +66,9 @@ export async function parseSlashCommands(
 		"remember", // LuciBuild fork: auto-memory write-back
 		"install", // LuciBuild fork: source/install/configure new tools
 		"bootstrap", // LuciBuild fork: scaffold a starter project from description
+		"audit", // LuciBuild fork: dependency security audit
+		"export-chat", // LuciBuild fork: export conversation as markdown playbook
+		"template", // LuciBuild fork: save or run a reusable workflow template
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -79,6 +85,9 @@ export async function parseSlashCommands(
 		remember: rememberToolResponse(), // LuciBuild fork
 		install: installToolResponse(), // LuciBuild fork
 		bootstrap: bootstrapToolResponse(), // LuciBuild fork
+		audit: auditToolResponse(), // LuciBuild fork
+		"export-chat": exportChatToolResponse(), // LuciBuild fork
+		template: templateToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

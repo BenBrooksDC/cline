@@ -2,6 +2,87 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /audit slash command. Runs a dependency security audit on the
+ * current project (npm audit / pip-audit / cargo audit / etc.) and surfaces
+ * vulnerabilities + suggested patches.
+ */
+export const auditToolResponse = () =>
+	`<explicit_instructions type="audit">
+Run a dependency security audit for the current workspace.
+
+Workflow:
+1. Detect the package ecosystem(s) in the workspace: package.json (npm), requirements.txt / pyproject.toml (pip), Cargo.toml (cargo), Gemfile (bundler), go.mod (go).
+2. For each detected ecosystem, run the appropriate free audit command:
+   - npm: \`npm audit --json\`
+   - pip: \`pip-audit --format json\` (offer to install pip-audit if missing)
+   - cargo: \`cargo audit --json\`
+   - bundler: \`bundle audit\`
+   - go: \`govulncheck ./...\`
+3. Parse results. For each vulnerability:
+   - Severity (critical / high / moderate / low)
+   - Affected package + version
+   - CVE / advisory ID
+   - Suggested fix (upgrade to version X)
+4. Output a prioritized table sorted by severity. Highlight any CRITICAL or HIGH issues that have a known patch.
+5. Offer to apply non-breaking fixes automatically (only patch/minor version bumps); ask before applying any major version bumps.
+6. Skip LLM-based vulnerability summaries — the free audit tools' output is sufficient.
+
+If no package manifests are found, say so and stop.
+
+Below is the user's audit request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /export-chat slash command. Exports the current conversation
+ * as a self-contained markdown playbook the user can share or replay later.
+ */
+export const exportChatToolResponse = () =>
+	`<explicit_instructions type="export-chat">
+Export the current conversation as a self-contained markdown "playbook" the user can share or replay.
+
+Workflow:
+1. Ask the user for a title (or propose one based on the task), output filename (default: \`~/lucibuild-playbooks/<slug>.md\`), and audience ("self" / "teammate" / "public").
+2. Synthesize the conversation into a clean playbook markdown with these sections:
+   - **Title**
+   - **One-paragraph summary** of the goal achieved
+   - **Prerequisites** (tools installed, env vars, repo state)
+   - **Step-by-step actions taken** (with the exact commands, file paths, key decisions)
+   - **Outcome** (what changed, what to expect when running it)
+   - **Caveats / things-to-check** (failure modes, manual steps that didn't get automated)
+3. STRIP secrets: scan for API keys, tokens, passwords, hostnames-with-credentials, .env values. Replace with \`<REDACTED>\` placeholders. NEVER include even partial keys.
+4. STRIP user-private context unless audience == "self": ~/CLAUDE.md content, ~/.claude/projects/.../memory/* references, ~/.zshrc paths.
+5. Use write_to_file to save it. Print the path so the user can share it.
+
+Below is the user's export request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /template slash command. Saves a successful workflow as a reusable template OR runs a saved template.
+ */
+export const templateToolResponse = () =>
+	`<explicit_instructions type="template">
+Manage reusable workflow templates.
+
+Templates live at \`~/.claude/lucibuild-templates/<name>.md\` as plain markdown describing the workflow steps.
+
+If the user's message starts with "save" or "create": treat it as save mode.
+  1. Synthesize the recent conversation into a step-by-step template.
+  2. Use write_to_file to save at the right path.
+  3. Confirm success with the saved name.
+
+If the user's message starts with "run", "use", or just a template name: treat it as run mode.
+  1. Read the template file.
+  2. Execute its steps in order, using ask_followup_question between each major step if the template has parameters.
+
+If the user just types \`/template\` with no description: list existing templates from the templates directory.
+
+Below is the user's template request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /bootstrap slash command. Scaffolds a complete starter project
  * matching a natural-language description. Aligned with the LuciBuild platform's
  * "submit-an-idea-we-build-it" mission.

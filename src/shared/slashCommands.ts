@@ -54,6 +54,24 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "audit",
+		description: "Run a dependency security audit and surface fixes (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "export-chat",
+		description: "Export this conversation as a self-contained markdown playbook (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "template",
+		description: "Save or run a reusable workflow template (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands
