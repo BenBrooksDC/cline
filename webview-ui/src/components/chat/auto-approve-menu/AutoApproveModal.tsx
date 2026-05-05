@@ -153,7 +153,8 @@ const AutoApproveModal: React.FC<AutoApproveModalProps> = ({ isVisible, setIsVis
 				</div>
 				<div className="mt-1 text-xs text-muted-foreground">
 					Forces approval for every write, patch, and command — overrides every other auto-approve setting. Reads stay
-					frictionless.
+					frictionless. Default ON for new installs; turn off once you've watched LuciBuild edit your code without
+					surprises.
 				</div>
 			</div>
 		</div>

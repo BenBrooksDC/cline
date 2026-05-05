@@ -54,6 +54,11 @@ export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
 		useMcp: true,
 	},
 	enableNotifications: false,
-	highStakesMode: false,
+	// LuciBuild Round T: high-stakes mode defaults TRUE on new installs. The fork
+	// is one day old as of 2026-05-05 and unverified at scale — every write,
+	// patch, and command should prompt until the user has watched a few sessions
+	// land cleanly and explicitly opts out via the auto-approve gear modal.
+	// Reads remain frictionless so search/list/grep isn't slowed down.
+	highStakesMode: true,
 	autoRollbackOnTypeError: true,
 }
