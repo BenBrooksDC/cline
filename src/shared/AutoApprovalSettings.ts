@@ -31,8 +31,12 @@ export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
 	favorites: [], // Legacy field - kept as empty array
 	maxRequests: 20, // Legacy field - kept for backward compatibility
 	actions: {
+		// LuciBuild fork: enable read-anywhere + safe commands by default so the
+		// agent can search/list/grep across the whole filesystem without prompting
+		// (matches Claude Code's frictionless feel). Writes still require explicit
+		// approval — those toggles stay off by default.
 		readFiles: true,
-		readFilesExternally: false,
+		readFilesExternally: true,
 		editFiles: false,
 		editFilesExternally: false,
 		executeSafeCommands: true,

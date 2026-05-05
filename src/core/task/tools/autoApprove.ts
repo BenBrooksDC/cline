@@ -4,6 +4,7 @@ import { ClineDefaultTool } from "@shared/tools"
 import { StateManager } from "@/core/storage/StateManager"
 import { HostProvider } from "@/hosts/host-provider"
 import { getCwd, getDesktopDir, isLocatedInPath, isLocatedInWorkspace } from "@/utils/path"
+import { isClaudeCodeAllowlisted } from "./claudeCodePermissions"
 
 export class AutoApprove {
 	private stateManager: StateManager
@@ -127,6 +128,12 @@ export class AutoApprove {
 			return true
 		}
 		if (this.stateManager.getGlobalSettingsKey("autoApproveAllToggled")) {
+			return true
+		}
+		// LuciBuild fork: honor Claude-Code-style pattern pre-approval from
+		// ~/.claude/settings.json (permissions.allow). Lets the user configure
+		// fine-grained allowlists once and have them apply across both ecosystems.
+		if (isClaudeCodeAllowlisted(blockname, autoApproveActionpath)) {
 			return true
 		}
 
