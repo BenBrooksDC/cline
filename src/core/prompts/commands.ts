@@ -2,6 +2,53 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /install slash command. Lets the user ask for a new tool by
+ * description; agent maps it to a concrete package + install command, surfaces
+ * a dry-run preview, and (after approval) installs and registers it.
+ */
+export const installToolResponse = () =>
+	`<explicit_instructions type="install">
+The user wants you to source, install, and configure a new tool that extends your capabilities. This may be:
+  - A CLI tool (installed via brew, apt, npm -g, pip, cargo, gem, go install, etc.)
+  - A library / package within the current workspace (npm install, pip install -r, etc.)
+  - An MCP server (installed via npx and registered with Cline's MCP config)
+  - A new VS Code extension (let the user know they need to install it themselves; you can't)
+
+Workflow you MUST follow:
+
+1. **Understand the request.** Parse the user's description. If ambiguous, ask ONE clarifying question (what platform? local tool or MCP server? specific package preferred?).
+
+2. **Identify the canonical package.** Use your knowledge + the LuciBuild MCP registry at \`src/core/tools/mcp-registry.json\` (when matching MCP servers) + 'npm view <pkg>' / 'pip show <pkg>' / 'brew info <pkg>' to verify the package exists and is the right one. Prefer official / first-party packages from known publishers.
+
+3. **Surface a dry-run preview.** Before executing, output a structured summary:
+   - Package name + version + publisher
+   - Install command verbatim
+   - What it adds (binary on PATH, library import, MCP tool surface, etc.)
+   - Estimated download size if available
+   - Anything destructive it might do (almost never, but flag if a postinstall script touches global state)
+
+4. **Get explicit approval.** Use ask_followup_question with options like ["Install", "Cancel", "Choose different package"]. Do NOT proceed without an explicit "Install" answer.
+
+5. **Execute the install.** Use execute_command. Capture stderr/stdout. Verify success with a smoke check (which <cmd>, npm view <pkg>, etc.).
+
+6. **Register if needed.**
+   - For MCP servers: update Cline's MCP config (use the use_mcp_tool / load_mcp_documentation tools or write to the MCP settings file directly).
+   - For CLI tools: just confirm 'which <cmd>' returns a path.
+   - For libraries: confirm the package appears in package.json / requirements.txt / Pipfile.
+
+7. **Propose a recipe memory.** After successful install, suggest saving an entry under ~/.claude/projects/-Users-<user>/memory/ as type 'reference' so future sessions remember the install command and any usage notes (filename: reference_<tool>_install.md).
+
+Hard rules:
+- NEVER skip the dry-run preview, even if the user seems impatient.
+- NEVER install something with sudo without explicit approval naming "sudo".
+- NEVER run install commands that touch shell config files (e.g., adding to ~/.zshrc) without explicit approval.
+- If install fails, surface the exact error; do NOT silently retry with a different package.
+
+Below is the user's installation request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /remember slash command. Mirrors Claude Code's auto-memory:
  * agent scans the current conversation, proposes memory entries for non-obvious
  * facts (user prefs, project state, reference links, feedback), and writes them

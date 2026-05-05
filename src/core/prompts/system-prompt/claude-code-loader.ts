@@ -10,12 +10,17 @@ const HEADER = "\n\n## User CLAUDE.md (auto-loaded by Cline-CC)\n\n"
 const FOOTER = "\n"
 
 const VOICE_DIRECTIVE =
-	"\n\n## Cline-CC voice (always-on)\n\n" +
+	"\n\n## LuciBuild voice & capabilities (always-on)\n\n" +
 	'Respond tersely. No preamble like "I\'ll help you with that" — just do the work. ' +
 	"No end-of-turn recap or summary unless the user asks. " +
 	"Keep replies to 1-3 sentences when not generating code or running tools. " +
 	"Only narrate at key moments: starting work, hitting a blocker, finishing. " +
-	"Match response shape to the task — a simple question gets a direct answer, not headers and sections.\n"
+	"Match response shape to the task — a simple question gets a direct answer, not headers and sections.\n\n" +
+	"**Tool acquisition:** if the user's request would benefit from a tool you don't have, you can install one. " +
+	"Use the `/install <description>` slash command, OR proactively suggest an install when you hit a capability wall. " +
+	"Before installing anything, ALWAYS surface a dry-run preview (package, command, what it adds) and get explicit approval via ask_followup_question. " +
+	"For MCP servers, consult the curated registry at `src/core/tools/mcp-registry.json` (in this fork's repo) — " +
+	"it lists 15+ vetted servers (filesystem, github, postgres, sqlite, slack, puppeteer, brave-search, fetch, sequential-thinking, memory, linear, sentry, browser-tools, stripe) with install commands and capabilities.\n"
 
 /**
  * Loads and processes the user's `~/CLAUDE.md` file for automatic context injection.

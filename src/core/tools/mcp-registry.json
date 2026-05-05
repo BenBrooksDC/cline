@@ -1,0 +1,281 @@
+{
+	"_comment": "LuciBuild MCP server registry — curated list. Used by the agent to suggest installs when a user task would benefit from a known MCP server. Reviewed quarterly. Add servers via PR.",
+	"_updated": "2026-05-05",
+	"servers": [
+		{
+			"name": "filesystem",
+			"package": "@modelcontextprotocol/server-filesystem",
+			"install": "npx -y @modelcontextprotocol/server-filesystem <allowed-paths>",
+			"description": "Read/write files in specified directories with sandboxed permissions",
+			"capabilities": [
+				"read_file",
+				"write_file",
+				"list_directory",
+				"create_directory",
+				"move_file"
+			],
+			"trigger_keywords": [
+				"files",
+				"directory",
+				"filesystem",
+				"read files"
+			]
+		},
+		{
+			"name": "github",
+			"package": "@modelcontextprotocol/server-github",
+			"install": "npx -y @modelcontextprotocol/server-github",
+			"requires_env": [
+				"GITHUB_PERSONAL_ACCESS_TOKEN"
+			],
+			"description": "Search repos, issues, PRs; create/update files; manage GitHub workflows",
+			"capabilities": [
+				"search_repositories",
+				"get_issue",
+				"create_pull_request",
+				"list_commits"
+			],
+			"trigger_keywords": [
+				"github",
+				"repo",
+				"issues",
+				"pull request",
+				"PR",
+				"commits"
+			]
+		},
+		{
+			"name": "postgres",
+			"package": "@modelcontextprotocol/server-postgres",
+			"install": "npx -y @modelcontextprotocol/server-postgres <connection-string>",
+			"description": "Read-only access to a Postgres database; introspect schema; run SELECT queries",
+			"capabilities": [
+				"query",
+				"list_tables",
+				"describe_table"
+			],
+			"trigger_keywords": [
+				"postgres",
+				"psql",
+				"database",
+				"sql",
+				"schema"
+			]
+		},
+		{
+			"name": "sqlite",
+			"package": "@modelcontextprotocol/server-sqlite",
+			"install": "npx -y @modelcontextprotocol/server-sqlite <db-path>",
+			"description": "Query and modify a SQLite database",
+			"capabilities": [
+				"query",
+				"list_tables",
+				"describe_table"
+			],
+			"trigger_keywords": [
+				"sqlite",
+				"db file",
+				"local database"
+			]
+		},
+		{
+			"name": "slack",
+			"package": "@modelcontextprotocol/server-slack",
+			"install": "npx -y @modelcontextprotocol/server-slack",
+			"requires_env": [
+				"SLACK_BOT_TOKEN",
+				"SLACK_TEAM_ID"
+			],
+			"description": "Read messages, send messages, manage channels in a Slack workspace",
+			"capabilities": [
+				"list_channels",
+				"post_message",
+				"read_messages"
+			],
+			"trigger_keywords": [
+				"slack",
+				"team chat",
+				"post to channel"
+			]
+		},
+		{
+			"name": "puppeteer",
+			"package": "@modelcontextprotocol/server-puppeteer",
+			"install": "npx -y @modelcontextprotocol/server-puppeteer",
+			"description": "Headless browser automation: navigate, screenshot, scrape (note: ToS risks per site)",
+			"capabilities": [
+				"navigate",
+				"screenshot",
+				"click",
+				"fill",
+				"evaluate"
+			],
+			"trigger_keywords": [
+				"browser",
+				"puppeteer",
+				"scrape",
+				"automate web",
+				"headless"
+			]
+		},
+		{
+			"name": "brave-search",
+			"package": "@modelcontextprotocol/server-brave-search",
+			"install": "npx -y @modelcontextprotocol/server-brave-search",
+			"requires_env": [
+				"BRAVE_API_KEY"
+			],
+			"description": "Privacy-respecting web search via Brave Search API",
+			"capabilities": [
+				"brave_web_search",
+				"brave_local_search"
+			],
+			"trigger_keywords": [
+				"search the web",
+				"brave",
+				"alternative search"
+			]
+		},
+		{
+			"name": "fetch",
+			"package": "@modelcontextprotocol/server-fetch",
+			"install": "npx -y @modelcontextprotocol/server-fetch",
+			"description": "HTTP fetch with markdown/JSON content extraction",
+			"capabilities": [
+				"fetch"
+			],
+			"trigger_keywords": [
+				"fetch url",
+				"scrape page",
+				"http request",
+				"api call"
+			]
+		},
+		{
+			"name": "sequential-thinking",
+			"package": "@modelcontextprotocol/server-sequential-thinking",
+			"install": "npx -y @modelcontextprotocol/server-sequential-thinking",
+			"description": "Structured chain-of-thought planning for complex multi-step problems",
+			"capabilities": [
+				"sequentialthinking"
+			],
+			"trigger_keywords": [
+				"plan step by step",
+				"complex reasoning",
+				"break down problem"
+			]
+		},
+		{
+			"name": "memory",
+			"package": "@modelcontextprotocol/server-memory",
+			"install": "npx -y @modelcontextprotocol/server-memory",
+			"description": "Persistent knowledge graph across sessions",
+			"capabilities": [
+				"create_entities",
+				"create_relations",
+				"search_nodes",
+				"open_nodes"
+			],
+			"trigger_keywords": [
+				"knowledge graph",
+				"remember entities",
+				"persistent memory"
+			]
+		},
+		{
+			"name": "linear",
+			"package": "@tacticlaunch/mcp-linear",
+			"install": "npx -y @tacticlaunch/mcp-linear",
+			"requires_env": [
+				"LINEAR_API_KEY"
+			],
+			"description": "Linear.app issue tracking: list/create/update issues, projects, cycles",
+			"capabilities": [
+				"list_issues",
+				"create_issue",
+				"update_issue",
+				"list_projects"
+			],
+			"trigger_keywords": [
+				"linear",
+				"issue tracker",
+				"ticket",
+				"sprint"
+			]
+		},
+		{
+			"name": "sentry",
+			"package": "@sentry/mcp-server",
+			"install": "npx -y @sentry/mcp-server",
+			"requires_env": [
+				"SENTRY_AUTH_TOKEN"
+			],
+			"description": "Read Sentry errors, issues, releases for the configured org",
+			"capabilities": [
+				"list_issues",
+				"get_issue",
+				"list_projects",
+				"search_errors"
+			],
+			"trigger_keywords": [
+				"sentry",
+				"error tracking",
+				"production errors",
+				"issues from prod"
+			]
+		},
+		{
+			"name": "browser-tools",
+			"package": "@agentdeskai/browser-tools-mcp",
+			"install": "npx -y @agentdeskai/browser-tools-mcp",
+			"description": "Inspect a running browser tab: console logs, network, DOM, screenshots",
+			"capabilities": [
+				"takeScreenshot",
+				"getConsoleLogs",
+				"getNetworkErrors",
+				"runAuditMode"
+			],
+			"trigger_keywords": [
+				"debug browser",
+				"browser console",
+				"network logs",
+				"frontend debug"
+			]
+		},
+		{
+			"name": "everything",
+			"package": "@modelcontextprotocol/server-everything",
+			"install": "npx -y @modelcontextprotocol/server-everything",
+			"description": "Demo / reference server exercising all MCP capabilities (testing only)",
+			"capabilities": [
+				"echo",
+				"add",
+				"longRunningOperation"
+			],
+			"trigger_keywords": [
+				"test mcp",
+				"mcp demo"
+			]
+		},
+		{
+			"name": "stripe",
+			"package": "@stripe/mcp",
+			"install": "npx -y @stripe/mcp",
+			"requires_env": [
+				"STRIPE_API_KEY"
+			],
+			"description": "Stripe API: list customers, payment intents, subscriptions, refunds",
+			"capabilities": [
+				"list_customers",
+				"create_payment_intent",
+				"list_subscriptions"
+			],
+			"trigger_keywords": [
+				"stripe",
+				"payments",
+				"billing",
+				"subscriptions"
+			]
+		}
+	]
+}

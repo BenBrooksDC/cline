@@ -42,6 +42,12 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "install",
+		description: "Source, install, and register a new tool (CLI / library / MCP server) (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands

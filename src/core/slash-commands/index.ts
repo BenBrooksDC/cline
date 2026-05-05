@@ -9,6 +9,7 @@ import {
 	condenseToolResponse,
 	deepPlanningToolResponse,
 	explainChangesToolResponse,
+	installToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
 	rememberToolResponse,
@@ -59,6 +60,7 @@ export async function parseSlashCommands(
 		"deep-planning",
 		"explain-changes",
 		"remember", // LuciBuild fork: auto-memory write-back
+		"install", // LuciBuild fork: source/install/configure new tools
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -73,6 +75,7 @@ export async function parseSlashCommands(
 		"deep-planning": deepPlanningToolResponse(focusChainSettings, providerInfo, willUseNativeTools),
 		"explain-changes": explainChangesToolResponse(),
 		remember: rememberToolResponse(), // LuciBuild fork
+		install: installToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags
