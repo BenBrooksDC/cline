@@ -14,6 +14,7 @@ import {
 	deepPlanningToolResponse,
 	diagramToolResponse,
 	explainChangesToolResponse,
+	explainDeepToolResponse,
 	exportChatToolResponse,
 	installToolResponse,
 	migrateToolResponse,
@@ -97,6 +98,7 @@ export async function parseSlashCommands(
 		"privacy", // LuciBuild fork: toggle privacy mode (all-local-only)
 		"review-pr", // LuciBuild fork: senior-eng review of a GitHub PR
 		"tools", // LuciBuild fork: discovery menu of every LuciBuild capability
+		"explain-deep", // LuciBuild fork: cost-aware deep read of a file
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -130,6 +132,7 @@ export async function parseSlashCommands(
 		privacy: privacyToolResponse(), // LuciBuild fork
 		"review-pr": reviewPrToolResponse(), // LuciBuild fork
 		tools: toolsToolResponse(), // LuciBuild fork
+		"explain-deep": explainDeepToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

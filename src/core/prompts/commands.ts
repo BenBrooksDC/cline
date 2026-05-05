@@ -35,6 +35,42 @@ Below is the user's PR review request:
 `
 
 /**
+ * LuciBuild fork: /explain-deep slash command. Multi-step deep read of a file
+ * with bounded transitive scope to keep cost down.
+ */
+export const explainDeepToolResponse = () =>
+	`<explicit_instructions type="explain-deep">
+The user wants a deep understanding of a file. Follow this exact recipe to balance depth vs cost:
+
+Step 1 — STRUCTURE FIRST (cheap):
+  Run \`list_code_definition_names\` on the directory containing the target file.
+  This gives you the symbol map for ~5% of the token cost of reading the file.
+
+Step 2 — READ THE TARGET FILE:
+  Use \`read_file\` on the specific file the user named. Full content.
+
+Step 3 — IDENTIFY KEY DEPENDENCIES:
+  Look at the import / require / use statements. For each import that's defined IN THIS WORKSPACE (not a stdlib or 3rd-party package), note the symbol name.
+
+Step 4 — DEPENDENCY DEEP-DIVE (BOUNDED):
+  For each in-workspace dependency, decide:
+    - If it's a small utility (≤30 LoC): read the whole file.
+    - If it's a large module: use \`search_files\` to find ONLY the specific exported symbol(s) referenced. Don't read the whole file.
+  Cap at 5 dependencies max. If there are more, pick the 5 most-referenced.
+
+Step 5 — DON'T RECURSE FURTHER. One level of depth is enough. Note in your output if you skipped deeper analysis.
+
+Step 6 — SYNTHESIZE:
+  Explain in this order: (a) what this file does in one sentence, (b) the key data structures / types, (c) the main entry points, (d) the data flow through the file, (e) non-obvious decisions or footguns, (f) likely places to extend or modify.
+  Do NOT do a line-by-line restatement. Aim for the explanation a senior engineer would give — what's NOT obvious from the code itself.
+
+Output format: structured markdown with headers. Code excerpts only when essential.
+
+Below is the user's deep-explain request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /tools slash command. Lists every LuciBuild slash command + tool
  * with a one-line description so the user can discover what's available.
  */
