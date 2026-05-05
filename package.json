@@ -129,7 +129,7 @@
 		"commands": [
 			{
 				"command": "cline.plusButtonClicked",
-				"title": "New Task",
+				"title": "New Chat",
 				"icon": "$(add)"
 			},
 			{
