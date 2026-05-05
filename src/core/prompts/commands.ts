@@ -2,6 +2,62 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /bootstrap slash command. Scaffolds a complete starter project
+ * matching a natural-language description. Aligned with the LuciBuild platform's
+ * "submit-an-idea-we-build-it" mission.
+ */
+export const bootstrapToolResponse = () =>
+	`<explicit_instructions type="bootstrap">
+The user wants you to scaffold a brand-new project from a natural-language description. Your job: produce a working starter project the user can run within minutes.
+
+Workflow you MUST follow:
+
+1. **Parse the description.** Extract: project type (web app, API, CLI, mobile, library, etc.), language/framework preference (if any), key features mentioned, target deployment if mentioned.
+
+2. **Propose a stack.** Output a concise stack proposal:
+   - Language + framework (e.g., "TypeScript + Vite + React" or "Python + FastAPI")
+   - Database (only if needed; default to none for MVPs)
+   - Test framework
+   - Key dependencies
+   - Project layout (top-level dirs)
+   - Default port / dev script
+   The proposal should default to LIGHT, modern, popular choices unless the user specified otherwise. Don't over-engineer.
+
+3. **Get approval.** Use ask_followup_question with options like ["Bootstrap with this stack", "Change something", "Cancel"]. Do not start scaffolding without explicit approval.
+
+4. **Pick a target directory.** Use the current workspace if appropriate; otherwise create a new dir as specified. Default name: kebab-case of the description's nouns (e.g., "recipe-tracker-app").
+
+5. **Scaffold:**
+   a. Initialize: \`npm init -y\` / \`uv init\` / \`cargo init\` etc. (whichever fits the stack).
+   b. Install deps: minimal set, pinned to recent stable versions. Use the LLM Relay (gpt4o or gemini-pro) to generate the package.json content if needed.
+   c. Create directory layout (use list_files to verify).
+   d. Write starter files:
+      - Entry point (index.ts / main.py / App.tsx / etc.) with a working "hello world" + one example feature.
+      - README.md with: one-paragraph description, prereqs, "how to run", "project layout", "next steps".
+      - .gitignore appropriate for the stack.
+      - Optional: Dockerfile if user mentioned deployment, .env.example if env vars are needed.
+   e. Run \`git init\`, stage, make initial commit titled "Initial scaffold by LuciBuild".
+
+6. **Verify.** Run the dev script (\`npm run dev\` or equivalent) — confirm it starts without errors. Take a screenshot if it's a web app and the browser-tools MCP is installed; otherwise just report the URL.
+
+7. **Hand off.** Print a clear summary:
+   - Working directory absolute path
+   - How to run dev server
+   - Where to put new code
+   - Next 3 suggested steps (e.g., "add a /health endpoint", "wire up a database", "write your first test")
+   - Optionally propose a memory entry under type 'project' with the project's purpose + stack so future LuciBuild sessions in this dir know what they're working on.
+
+Hard rules:
+- NEVER scaffold inside ~/Desktop, ~/Documents, ~/Downloads, or ~ itself unless the user explicitly approved (the checkpoint allowlist guards against this for git, but the user might still ask).
+- NEVER overwrite a non-empty directory without explicit approval.
+- NEVER add proprietary or paid services (Stripe, Auth0, etc.) by default — only if the user asked for them.
+- KEEP the dependency list LIGHT. A scaffold with 200 deps is a failure. Aim for under 30 direct deps for a typical web/API project.
+
+Below is the user's bootstrap request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /install slash command. Lets the user ask for a new tool by
  * description; agent maps it to a concrete package + install command, surfaces
  * a dry-run preview, and (after approval) installs and registers it.

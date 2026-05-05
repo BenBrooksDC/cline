@@ -6,6 +6,7 @@ import { telemetryService } from "@/services/telemetry"
 import { Logger } from "@/shared/services/Logger"
 import { isNativeToolCallingConfig } from "@/utils/model-utils"
 import {
+	bootstrapToolResponse,
 	condenseToolResponse,
 	deepPlanningToolResponse,
 	explainChangesToolResponse,
@@ -61,6 +62,7 @@ export async function parseSlashCommands(
 		"explain-changes",
 		"remember", // LuciBuild fork: auto-memory write-back
 		"install", // LuciBuild fork: source/install/configure new tools
+		"bootstrap", // LuciBuild fork: scaffold a starter project from description
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -76,6 +78,7 @@ export async function parseSlashCommands(
 		"explain-changes": explainChangesToolResponse(),
 		remember: rememberToolResponse(), // LuciBuild fork
 		install: installToolResponse(), // LuciBuild fork
+		bootstrap: bootstrapToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

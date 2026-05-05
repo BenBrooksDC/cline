@@ -48,6 +48,12 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "bootstrap",
+		description: "Scaffold a starter project from a natural-language description (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands
