@@ -2,6 +2,39 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /review-pr slash command. Review someone else's PR
+ * (or your own) like a senior reviewer would.
+ */
+export const reviewPrToolResponse = () =>
+	`<explicit_instructions type="review-pr">
+The user wants you to review a pull request. The PR may be specified by URL, number, or just "this branch".
+
+Workflow:
+1. Identify the PR target:
+   - URL pattern: parse owner/repo + PR number
+   - "#123" or "PR 123": resolve via gh CLI in current repo
+   - "this branch" / no arg: review the local diff against the base branch
+2. Fetch the diff: \`gh pr diff <number>\` or \`gh api repos/<o>/<r>/pulls/<n>/files\` — handle large PRs by paginating.
+3. Read the PR description (gh pr view <n>) for stated intent.
+4. Read the diff. For each changed file, evaluate:
+   - **Does the change match stated intent?** (description says X, diff does Y?)
+   - **Correctness:** edge cases, null handling, race conditions
+   - **Security:** secrets, injection, auth bypass
+   - **Performance:** O(n²), unnecessary re-renders, sync I/O on hot paths
+   - **Style fit:** matches existing codebase conventions
+   - **Test coverage:** new code without new tests?
+   - **Backward compatibility:** breaking changes flagged in description?
+   - **Documentation:** API changes without docs?
+5. **Output:** structured review with file:line — finding — suggested action. Group by severity (must-fix / should-fix / nit). End with a one-line verdict: approve / request-changes / comment.
+6. Offer to post the review as inline comments via gh pr review (with explicit user approval before posting).
+
+Be honest. Don't invent issues to seem thorough. If the PR is good, say "looks good — approve".
+
+Below is the user's PR review request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /privacy slash command. Toggle privacy mode (all-local-only).
  */
 export const privacyToolResponse = () =>

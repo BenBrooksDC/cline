@@ -26,6 +26,7 @@ import {
 	privacyToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
+	reviewPrToolResponse,
 	secretRotateToolResponse,
 	snippetToolResponse,
 	tddToolResponse,
@@ -93,6 +94,7 @@ export async function parseSlashCommands(
 		"snippet", // LuciBuild fork: reusable code snippet library
 		"onboard", // LuciBuild fork: first-run repo onboarding brief
 		"privacy", // LuciBuild fork: toggle privacy mode (all-local-only)
+		"review-pr", // LuciBuild fork: senior-eng review of a GitHub PR
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -124,6 +126,7 @@ export async function parseSlashCommands(
 		snippet: snippetToolResponse(), // LuciBuild fork
 		onboard: onboardToolResponse(), // LuciBuild fork
 		privacy: privacyToolResponse(), // LuciBuild fork
+		"review-pr": reviewPrToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

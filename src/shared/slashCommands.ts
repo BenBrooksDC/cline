@@ -144,6 +144,12 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "review-pr",
+		description: "Senior-engineer code review of a GitHub PR (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands
