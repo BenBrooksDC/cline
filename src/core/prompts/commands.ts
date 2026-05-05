@@ -2,6 +2,27 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /privacy slash command. Toggle privacy mode (all-local-only).
+ */
+export const privacyToolResponse = () =>
+	`<explicit_instructions type="privacy">
+The user wants to toggle privacy mode. When ON, this fork should refuse to call any remote API (no web_fetch, no web_search, no llm_relay against hosted models, no remote inference).
+
+Workflow:
+1. Read current state by inspecting \`~/.claude/lucibuild-costly-features.json\` for the \`privacy-mode\` entry. If absent or \`enabled: false\`, treat as OFF.
+2. Confirm intent with ask_followup_question:
+   - If currently OFF: "Enable privacy mode? Many features (web_fetch, web_search, hosted-model inference) will become unavailable. Local-only Ollama models continue to work."
+   - If currently ON: "Disable privacy mode? Hosted-model and web-tool calls will be allowed again."
+3. On approval, write to \`~/.claude/lucibuild-costly-features.json\` updating the \`privacy-mode\` entry.
+4. Confirm to the user. If turning ON for the first time, also explicitly note: "Restart any active Cline-CC chats to pick up the new restriction."
+
+Hard rule: NEVER toggle privacy mode without explicit user confirmation in this turn. NEVER infer it from a question — only from a clear toggle request.
+
+Below is the user's privacy request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /onboard slash command. First-run repo onboarding wizard.
  */
 export const onboardToolResponse = () =>

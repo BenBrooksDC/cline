@@ -1,4 +1,5 @@
 import { getAcceptanceSummary } from "@/core/usage/AcceptanceTracker"
+import { getEnabledFeaturesSummary } from "@/core/usage/CostlyFeatures"
 import { loadGitContext } from "@/core/usage/GitContext"
 import { loadLastSessionSummary } from "@/core/usage/SessionContinuity"
 import { loadUserProfile } from "@/core/usage/UserProfile"
@@ -29,18 +30,27 @@ export { validateVariant } from "./variants/variant-validator"
 export async function getSystemPrompt(context: SystemPromptContext) {
 	const registry = PromptRegistry.getInstance()
 	const workspacePath = process.env.PWD || ""
-	const [basePrompt, claudeCodeContext, memoryIndex, sessionSummary, gitContext, userProfile] = await Promise.all([
-		registry.get(context),
-		loadClaudeCodeContext(),
-		loadClineCodeMemoryIndex(),
-		loadLastSessionSummary(workspacePath),
-		loadGitContext(workspacePath),
-		loadUserProfile(workspacePath),
-	])
+	const [basePrompt, claudeCodeContext, memoryIndex, sessionSummary, gitContext, userProfile, costlyFeatures] =
+		await Promise.all([
+			registry.get(context),
+			loadClaudeCodeContext(),
+			loadClineCodeMemoryIndex(),
+			loadLastSessionSummary(workspacePath),
+			loadGitContext(workspacePath),
+			loadUserProfile(workspacePath),
+			getEnabledFeaturesSummary(),
+		])
 	// T22 self-eval: inject acceptance-rate stats so the agent can self-correct
 	const acceptanceSummary = getAcceptanceSummary()
 	const systemPrompt =
-		basePrompt + claudeCodeContext + memoryIndex + sessionSummary + gitContext + userProfile + acceptanceSummary
+		basePrompt +
+		claudeCodeContext +
+		memoryIndex +
+		sessionSummary +
+		gitContext +
+		userProfile +
+		costlyFeatures +
+		acceptanceSummary
 	const tools = context.enableNativeToolCalls ? registry.nativeTools : undefined
 	return { systemPrompt, tools }
 }

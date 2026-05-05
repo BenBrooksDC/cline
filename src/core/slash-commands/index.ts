@@ -23,6 +23,7 @@ import {
 	perfToolResponse,
 	personaToolResponse,
 	preCommitReviewToolResponse,
+	privacyToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
 	secretRotateToolResponse,
@@ -91,6 +92,7 @@ export async function parseSlashCommands(
 		"secret-rotate", // LuciBuild fork: detect hardcoded secrets, .env migration
 		"snippet", // LuciBuild fork: reusable code snippet library
 		"onboard", // LuciBuild fork: first-run repo onboarding brief
+		"privacy", // LuciBuild fork: toggle privacy mode (all-local-only)
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -121,6 +123,7 @@ export async function parseSlashCommands(
 		"secret-rotate": secretRotateToolResponse(), // LuciBuild fork
 		snippet: snippetToolResponse(), // LuciBuild fork
 		onboard: onboardToolResponse(), // LuciBuild fork
+		privacy: privacyToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags
