@@ -6,9 +6,11 @@ import { telemetryService } from "@/services/telemetry"
 import { Logger } from "@/shared/services/Logger"
 import { isNativeToolCallingConfig } from "@/utils/model-utils"
 import {
+	a11yToolResponse,
 	auditToolResponse,
 	bootstrapToolResponse,
 	condenseToolResponse,
+	debtToolResponse,
 	deepPlanningToolResponse,
 	diagramToolResponse,
 	explainChangesToolResponse,
@@ -17,10 +19,13 @@ import {
 	migrateToolResponse,
 	newRuleToolResponse,
 	newTaskToolResponse,
+	perfToolResponse,
 	personaToolResponse,
 	preCommitReviewToolResponse,
 	rememberToolResponse,
 	reportBugToolResponse,
+	secretRotateToolResponse,
+	snippetToolResponse,
 	tddToolResponse,
 	templateToolResponse,
 } from "../prompts/commands"
@@ -79,6 +84,11 @@ export async function parseSlashCommands(
 		"migrate", // LuciBuild fork: known multi-file migrations
 		"diagram", // LuciBuild fork: generate Mermaid/PlantUML architecture diagrams
 		"persona", // LuciBuild fork: switch agent persona for the task
+		"a11y", // LuciBuild fork: accessibility + i18n audit
+		"debt", // LuciBuild fork: tech-debt tracker
+		"perf", // LuciBuild fork: performance profiling and optimization
+		"secret-rotate", // LuciBuild fork: detect hardcoded secrets, .env migration
+		"snippet", // LuciBuild fork: reusable code snippet library
 	]
 
 	// Determine if the current provider/model/setting actually uses native tool calling
@@ -103,6 +113,11 @@ export async function parseSlashCommands(
 		migrate: migrateToolResponse(), // LuciBuild fork
 		diagram: diagramToolResponse(), // LuciBuild fork
 		persona: personaToolResponse(), // LuciBuild fork
+		a11y: a11yToolResponse(), // LuciBuild fork
+		debt: debtToolResponse(), // LuciBuild fork
+		perf: perfToolResponse(), // LuciBuild fork
+		"secret-rotate": secretRotateToolResponse(), // LuciBuild fork
+		snippet: snippetToolResponse(), // LuciBuild fork
 	}
 
 	// Regex patterns to extract content from different XML tags

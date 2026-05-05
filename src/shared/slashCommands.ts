@@ -102,6 +102,36 @@ export const BASE_SLASH_COMMANDS: SlashCommand[] = [
 		section: "default",
 		cliCompatible: true,
 	},
+	{
+		name: "a11y",
+		description: "Accessibility + i18n audit (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "debt",
+		description: "Tech-debt tracker: TODO/FIXME, complexity, dead code, outdated deps (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "perf",
+		description: "Run a performance profiler and propose optimizations (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "secret-rotate",
+		description: "Detect hardcoded secrets and migrate to env vars (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
+	{
+		name: "snippet",
+		description: "Save / retrieve reusable code snippets (LuciBuild)",
+		section: "default",
+		cliCompatible: true,
+	},
 ]
 
 // VS Code-only slash commands

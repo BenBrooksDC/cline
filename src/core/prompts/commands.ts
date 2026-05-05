@@ -2,6 +2,131 @@ import type { ApiProviderInfo } from "@/core/api"
 import { getDeepPlanningPrompt } from "./commands/deep-planning"
 
 /**
+ * LuciBuild fork: /a11y slash command. Accessibility + i18n audit.
+ */
+export const a11yToolResponse = () =>
+	`<explicit_instructions type="a11y">
+Audit the workspace for accessibility (a11y) and internationalization (i18n) issues.
+
+Workflow:
+1. Detect frontend type: React (.tsx/.jsx), Vue, Svelte, plain HTML.
+2. Scan for common issues:
+   - Missing alt text on <img>
+   - Buttons / links without accessible names
+   - Color contrast inferred from style/CSS files
+   - Missing label-for / aria-label on form inputs
+   - <div onClick> instead of <button> (keyboard inaccessible)
+   - Missing role / aria attributes on custom components
+   - Hardcoded English strings outside an i18n catalog (suggest extraction)
+   - Missing lang attribute on <html>
+3. Output a prioritized list (must-fix / should-fix / nit) with file:line and suggested fix.
+4. Offer to apply fixes for the must-fix tier automatically; ask for the rest.
+
+Skip backend-only repos with no UI.
+
+Below is the user's a11y request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /debt slash command. Tech-debt tracker.
+ */
+export const debtToolResponse = () =>
+	`<explicit_instructions type="debt">
+Scan the workspace for tech-debt indicators and produce a prioritized list.
+
+Sources to check:
+  - TODO / FIXME / XXX / HACK comments
+  - Functions over 100 lines
+  - Files over 800 lines
+  - Cyclomatic complexity hot spots (look for deeply nested if/else, switch with many cases)
+  - Duplicate code blocks (use grep / search_files for similar function bodies)
+  - Dead code (functions with no callers — use grep on identifiers)
+  - Outdated deps (compare package.json to npm view <pkg> latest)
+  - Missing tests for public APIs
+  - Commented-out code blocks
+
+Output format: priority-scored markdown table (P0 critical / P1 high / P2 nice-to-have) with file:line, type, description, suggested action. Save to \`~/.lucibuild/debt-<workspace-hash>.json\` so it persists across sessions and you can show diffs over time.
+
+Below is the user's debt-tracker request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /perf slash command. Performance profiler integration.
+ */
+export const perfToolResponse = () =>
+	`<explicit_instructions type="perf">
+Profile the project's performance and propose optimizations.
+
+Workflow:
+1. Detect language/runtime and pick a profiler:
+   - Node.js: \`clinic.js\` doctor / flame / bubbleprof, or built-in \`node --prof\`
+   - Python: \`pyinstrument\` (preferred), \`cProfile\`, or \`py-spy\`
+   - Rust: \`cargo flamegraph\`
+   - Go: built-in pprof
+   - Generic CLI: \`hyperfine\` for benchmarking
+2. Ask the user what to profile (a script, an HTTP request flow, a hot function). If unclear, propose the test-suite as a default.
+3. Install the profiler if missing (use the dry-run install gate from /install).
+4. Run the profile, capture the output.
+5. Identify the top N hotspots by cumulative time. For each, propose an optimization with code-level specificity (algorithm change, caching, batching, async I/O, etc.).
+6. Offer to apply the top 1-3 fixes; defer the rest unless asked.
+
+Below is the user's perf request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /secret-rotate slash command. Detects hardcoded secrets,
+ * proposes .env migration, generates .env.example.
+ */
+export const secretRotateToolResponse = () =>
+	`<explicit_instructions type="secret-rotate">
+Find hardcoded secrets in the workspace and propose a migration to environment variables.
+
+Workflow:
+1. Scan source files for: API keys, OAuth tokens, JWT secrets, DB connection strings with passwords, Stripe keys (sk_*), AWS credentials, GitHub tokens (ghp_*, gho_*, ghs_*), private keys, base64-encoded secrets >32 chars.
+2. For each finding:
+   - File:line
+   - Type of secret (high-confidence guess)
+   - Severity (production-key vs test/dev key heuristic)
+3. Propose an .env migration:
+   - Generate / update \`.env\` with the values (NEVER commit this — verify .gitignore)
+   - Generate / update \`.env.example\` with placeholder values
+   - Update source code to read from process.env / os.environ
+   - Add the load step (dotenv, python-dotenv, etc.) if not already present
+4. CRITICAL: also remind the user to ROTATE the leaked secrets in their respective dashboards. Hardcoded = leaked = must be rotated regardless of whether code is public.
+5. Don't auto-commit changes; let the user verify.
+
+Below is the user's secret-rotate request:
+</explicit_instructions>\n
+`
+
+/**
+ * LuciBuild fork: /snippet slash command. Reusable snippet library.
+ */
+export const snippetToolResponse = () =>
+	`<explicit_instructions type="snippet">
+Manage reusable code snippets stored at \`~/.claude/lucibuild-snippets/\`.
+
+If the user's message starts with "save" or "create": save mode.
+  1. Identify the recent code that should become a snippet.
+  2. Ask for a short name (kebab-case, e.g. "auth-middleware").
+  3. write_to_file at \`~/.claude/lucibuild-snippets/<name>.<ext>\` with a 2-line header comment describing what it does.
+  4. Confirm.
+
+If the user's message starts with "use", "insert", or just a snippet name: retrieve mode.
+  1. List matches if name is fuzzy.
+  2. read_file the snippet.
+  3. Insert into the active editor at the cursor (or paste into a new file the user opens).
+
+If just \`/snippet\`: list all snippets in the directory with their first-line descriptions.
+
+Below is the user's snippet request:
+</explicit_instructions>\n
+`
+
+/**
  * LuciBuild fork: /migrate slash command. Multi-file automated migrations
  * for known transformations.
  */
