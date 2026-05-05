@@ -1,5 +1,6 @@
 import type React from "react"
 import styled from "styled-components"
+import { PanelNewChatButton } from "./PanelNewChatButton"
 
 interface ChatLayoutProps {
 	isHidden: boolean
@@ -7,12 +8,17 @@ interface ChatLayoutProps {
 }
 
 /**
- * Main layout container for the chat view
- * Provides the fixed positioning and flex layout structure
+ * Main layout container for the chat view.
+ * Provides the fixed positioning and flex layout structure.
+ *
+ * LuciBuild fork (T19): renders an always-visible "New Chat" button in the
+ * top-right corner of the chat panel (like Claude Code's UI), independent of
+ * whether a task is currently active.
  */
 export const ChatLayout: React.FC<ChatLayoutProps> = ({ isHidden, children }) => {
 	return (
 		<ChatLayoutContainer isHidden={isHidden}>
+			{!isHidden && <PanelNewChatButton />}
 			<MainContent>{children}</MainContent>
 		</ChatLayoutContainer>
 	)
