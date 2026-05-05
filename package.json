@@ -283,7 +283,7 @@
 			"view/title": [
 				{
 					"command": "cline.plusButtonClicked",
-					"group": "navigation@1",
+					"group": "navigation@99",
 					"when": "view == claude-dev.SidebarProvider"
 				},
 				{
