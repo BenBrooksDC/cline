@@ -1,7 +1,13 @@
 import { name, publisher, version } from "../package.json"
 import { HostProvider } from "./hosts/host-provider"
 
-const prefix = name === "claude-dev" ? "cline" : name
+// LuciBuild fork: package.json contributes.* still references the upstream
+// "cline" command-id prefix and "claude-dev" view-id namespace because those
+// are user-visible to VS Code's contribution system and changing them would
+// require renaming dozens of entries. We keep the upstream prefix at runtime
+// regardless of what `name` is set to in package.json.
+const prefix = name === "claude-dev" || name === "lucibuild" ? "cline" : name
+const VIEW_ID_NAMESPACE = name === "claude-dev" || name === "lucibuild" ? "claude-dev" : name
 
 /**
  * List of commands with the name of the extension they are registered under.
@@ -37,7 +43,7 @@ const ClineCommands = {
  * These should match the name + view IDs defined in package.json.
  */
 const ClineViewIds = {
-	Sidebar: name + ".SidebarProvider",
+	Sidebar: VIEW_ID_NAMESPACE + ".SidebarProvider",
 }
 
 /**
