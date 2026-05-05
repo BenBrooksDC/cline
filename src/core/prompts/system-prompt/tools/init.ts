@@ -11,6 +11,7 @@ import { focus_chain_variants } from "./focus_chain"
 import { generate_explanation_variants } from "./generate_explanation"
 import { list_code_definition_names_variants } from "./list_code_definition_names"
 import { list_files_variants } from "./list_files"
+import { llm_relay_variants } from "./llm_relay"
 import { load_mcp_documentation_variants } from "./load_mcp_documentation"
 import { new_task_variants } from "./new_task"
 import { plan_mode_respond_variants } from "./plan_mode_respond"
@@ -42,6 +43,7 @@ export function registerClineToolSets(): void {
 		...generate_explanation_variants,
 		...list_code_definition_names_variants,
 		...list_files_variants,
+		...llm_relay_variants,
 		...load_mcp_documentation_variants,
 		...new_task_variants,
 		...plan_mode_respond_variants,

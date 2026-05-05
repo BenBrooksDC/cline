@@ -1,8 +1,74 @@
-import { access, constants, mkdir } from "fs/promises"
+import { access, constants, mkdir, readFile, writeFile } from "fs/promises"
 import os from "os"
 import * as path from "path"
 import { HostProvider } from "@/hosts/host-provider"
+import { ShowMessageType } from "@/shared/proto/host/window"
 import { getCwd, getDesktopDir } from "@/utils/path"
+
+const CHECKPOINT_ALLOWLIST_PATH = path.join(os.homedir(), ".claude", "cline-cc-checkpoint-allowlist.json")
+
+/**
+ * Cline-CC fork: read the user's checkpoint-allowlist to decide whether a
+ * normally-protected workspace path (Desktop, Documents, Downloads, home) is
+ * explicitly approved by the user.
+ */
+async function isCheckpointAllowlisted(workspacePath: string): Promise<boolean> {
+	try {
+		const raw = await readFile(CHECKPOINT_ALLOWLIST_PATH, "utf-8")
+		const data = JSON.parse(raw) as { paths?: string[] }
+		const list = (data.paths ?? []).map((p) => path.resolve(p.replace(/^~/, os.homedir())))
+		return list.includes(path.resolve(workspacePath))
+	} catch {
+		return false
+	}
+}
+
+/**
+ * Cline-CC fork: persist a path to the checkpoint allowlist so future sessions don't re-prompt.
+ */
+async function addToCheckpointAllowlist(workspacePath: string): Promise<void> {
+	let data: { paths: string[] } = { paths: [] }
+	try {
+		const raw = await readFile(CHECKPOINT_ALLOWLIST_PATH, "utf-8")
+		data = JSON.parse(raw)
+		if (!Array.isArray(data.paths)) {
+			data.paths = []
+		}
+	} catch {
+		// missing file is fine
+	}
+	const resolved = path.resolve(workspacePath)
+	if (!data.paths.includes(resolved)) {
+		data.paths.push(resolved)
+		await mkdir(path.dirname(CHECKPOINT_ALLOWLIST_PATH), { recursive: true })
+		await writeFile(CHECKPOINT_ALLOWLIST_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8")
+	}
+}
+
+/**
+ * Cline-CC fork: prompt the user to approve checkpoints in a normally-protected directory.
+ * Returns true if the user approved (and persists to the allowlist), false otherwise.
+ */
+async function promptToApproveCheckpointDir(workspacePath: string, label: string): Promise<boolean> {
+	try {
+		const response = await HostProvider.window.showMessage({
+			type: ShowMessageType.WARNING,
+			message: `Cline-CC: ${label} is a protected directory. Allow checkpoints (auto-git snapshots) here for this folder?`,
+			options: {
+				modal: false,
+				items: ["Approve and remember", "Cancel"],
+				detail: `Path: ${workspacePath}\n\nApproving writes this path to ${CHECKPOINT_ALLOWLIST_PATH} so you won't be asked again.`,
+			},
+		})
+		if (response.selectedOption === "Approve and remember") {
+			await addToCheckpointAllowlist(workspacePath)
+			return true
+		}
+	} catch {
+		// If the prompt mechanism fails for any reason, fall back to deny
+	}
+	return false
+}
 
 /**
  * Gets the path to the shadow Git repository in globalStorage.
@@ -51,20 +117,38 @@ export async function validateWorkspacePath(workspacePath: string): Promise<void
 		)
 	}
 
+	// Cline-CC: if the user has previously approved this path, skip the protected-dir check
+	if (await isCheckpointAllowlisted(workspacePath)) {
+		return
+	}
+
 	const homedir = os.homedir()
 	const desktopPath = getDesktopDir()
 	const documentsPath = path.join(homedir, "Documents")
 	const downloadsPath = path.join(homedir, "Downloads")
 
+	let label: string | null = null
 	switch (workspacePath) {
 		case homedir:
-			throw new Error("Cannot use checkpoints in home directory")
+			label = "home directory"
+			break
 		case desktopPath:
-			throw new Error("Cannot use checkpoints in Desktop directory")
+			label = "Desktop directory"
+			break
 		case documentsPath:
-			throw new Error("Cannot use checkpoints in Documents directory")
+			label = "Documents directory"
+			break
 		case downloadsPath:
-			throw new Error("Cannot use checkpoints in Downloads directory")
+			label = "Downloads directory"
+			break
+	}
+
+	if (label) {
+		// Cline-CC: ask the user to approve instead of hard-erroring
+		const approved = await promptToApproveCheckpointDir(workspacePath, label)
+		if (!approved) {
+			throw new Error(`Cannot use checkpoints in ${label} (user declined approval)`)
+		}
 	}
 }
 

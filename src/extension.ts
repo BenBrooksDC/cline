@@ -38,6 +38,7 @@ import {
 	migrateWorkspaceToGlobalStorage,
 } from "./core/storage/state-migrations"
 import { workspaceResolver } from "./core/workspace"
+import { registerUsageStatusBar } from "./hosts/vscode/cline-cc-status-bar"
 import { findMatchingNotebookCell, getContextForCommand, showWebview } from "./hosts/vscode/commandUtils"
 import { abortCommitGeneration, generateCommitMsg } from "./hosts/vscode/commit-message-generator"
 import { registerClineOutputChannel } from "./hosts/vscode/hostbridge/env/debugLog"
@@ -86,6 +87,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Initialize test mode and add disposables to context
 	const testModeWatchers = await initializeTestMode(webview)
 	context.subscriptions.push(...testModeWatchers)
+
+	// Cline-CC fork: register the live cross-provider usage monitor in the status bar
+	registerUsageStatusBar(context)
 
 	// Initialize hook discovery cache for performance optimization
 	HookDiscoveryCache.getInstance().initialize(

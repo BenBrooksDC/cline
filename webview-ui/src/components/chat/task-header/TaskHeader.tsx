@@ -10,6 +10,7 @@ import CopyTaskButton from "./buttons/CopyTaskButton"
 import DeleteTaskButton from "./buttons/DeleteTaskButton"
 import NewTaskButton from "./buttons/NewTaskButton"
 import OpenDiskConversationHistoryButton from "./buttons/OpenDiskConversationHistoryButton"
+import SettingsGearButton from "./buttons/SettingsGearButton"
 import { CheckpointError } from "./CheckpointError"
 import ContextWindow from "./ContextWindow"
 import { FocusChain } from "./FocusChain"
@@ -176,6 +177,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 								<span className="text-xs sm:text-sm">${totalCost?.toFixed(4)}</span>
 							</div>
 						)}
+						<SettingsGearButton className={BUTTON_CLASS} />
 						<NewTaskButton className={BUTTON_CLASS} onClick={onClose} />
 					</div>
 				</div>

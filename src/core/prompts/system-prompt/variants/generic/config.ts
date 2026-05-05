@@ -74,6 +74,7 @@ export const config = createVariant(ModelFamily.GENERIC)
 		ClineDefaultTool.GENERATE_EXPLANATION,
 		ClineDefaultTool.USE_SKILL,
 		ClineDefaultTool.USE_SUBAGENTS,
+		ClineDefaultTool.LLM_RELAY,
 	)
 	.placeholders({
 		MODEL_FAMILY: "generic",

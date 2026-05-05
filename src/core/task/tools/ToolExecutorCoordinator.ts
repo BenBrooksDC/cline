@@ -13,6 +13,7 @@ import { ExecuteCommandToolHandler } from "./handlers/ExecuteCommandToolHandler"
 import { GenerateExplanationToolHandler } from "./handlers/GenerateExplanationToolHandler"
 import { ListCodeDefinitionNamesToolHandler } from "./handlers/ListCodeDefinitionNamesToolHandler"
 import { ListFilesToolHandler } from "./handlers/ListFilesToolHandler"
+import { LLMRelayToolHandler } from "./handlers/LLMRelayToolHandler"
 import { LoadMcpDocumentationHandler } from "./handlers/LoadMcpDocumentationHandler"
 import { NewTaskHandler } from "./handlers/NewTaskHandler"
 import { PlanModeRespondHandler } from "./handlers/PlanModeRespondHandler"
@@ -106,6 +107,7 @@ export class ToolExecutorCoordinator {
 		[ClineDefaultTool.GENERATE_EXPLANATION]: (_v: ToolValidator) => new GenerateExplanationToolHandler(),
 		[ClineDefaultTool.USE_SKILL]: (_v: ToolValidator) => new UseSkillToolHandler(),
 		[ClineDefaultTool.USE_SUBAGENTS]: (_v: ToolValidator) => new UseSubagentsToolHandler(),
+		[ClineDefaultTool.LLM_RELAY]: (_v: ToolValidator) => new LLMRelayToolHandler(),
 	}
 
 	/**

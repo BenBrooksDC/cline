@@ -2850,6 +2850,23 @@ export class Task {
 							cacheReadTokens: chunk.cacheReadTokens,
 							totalCost: chunk.totalCost,
 						})
+						// Cline-CC fork: record per-call usage for the cross-provider monitor
+						import("../usage/UsageTracker")
+							.then(({ UsageTracker }) => {
+								UsageTracker.get().record({
+									modelId: modelInfo.modelId,
+									inputTokens: chunk.inputTokens,
+									outputTokens: chunk.outputTokens,
+									cacheReadTokens: chunk.cacheReadTokens ?? 0,
+									cacheWriteTokens: chunk.cacheWriteTokens ?? 0,
+									costUsd: chunk.totalCost,
+									source: "cline",
+									taskId: this.taskId,
+								})
+							})
+							.catch(() => {
+								/* never let usage tracking break a real API call */
+							})
 					},
 				})
 
