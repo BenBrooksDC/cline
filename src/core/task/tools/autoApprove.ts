@@ -6,15 +6,23 @@ import { HostProvider } from "@/hosts/host-provider"
 import { getCwd, getDesktopDir, isLocatedInPath, isLocatedInWorkspace } from "@/utils/path"
 import { isClaudeCodeAllowlisted } from "./claudeCodePermissions"
 
-// LuciBuild Round T: tools that mutate state (writes / patches / commands).
+// LuciBuild Round T: tools that mutate state (writes / patches).
 // When high-stakes mode is on, these always require user approval, regardless
 // of any other auto-approve setting. Reads stay frictionless.
+//
+// BASH is intentionally NOT in this set. Reason: GT4 (blastRadius.ts) already
+// forces manual approval for actually-destructive commands (rm -rf, git reset
+// --hard, dropdb, etc.) regardless of any setting. Adding BASH here would
+// double-gate every command — including safe ones like `ls`, `git status`,
+// `npm test` — which leaves approval prompts sitting unattended in the chat,
+// blowing the prompt-cache TTL and causing user-visible "freezes". The
+// executeSafeCommands / executeAllCommands toggles are the right knobs for
+// command auto-approval; high-stakes layers on top of those for FILE writes.
 const MUTATING_TOOLS: ReadonlySet<ClineDefaultTool> = new Set([
 	ClineDefaultTool.NEW_RULE,
 	ClineDefaultTool.FILE_NEW,
 	ClineDefaultTool.FILE_EDIT,
 	ClineDefaultTool.APPLY_PATCH,
-	ClineDefaultTool.BASH,
 ])
 
 export class AutoApprove {
